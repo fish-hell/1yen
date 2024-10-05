@@ -201,7 +201,7 @@
 
   <!-- 1円ゲームコンテナ -->
   <div class="game-container" id="game-container">
-    <h2>1円ゲーム</h2>
+    <p>　　　　　　　　　　　1円ギャンブル v1.1</p>
     <div class="game-controls">
       <label>
         <input type="radio" name="bet-side" value="表" checked>
@@ -240,7 +240,7 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
   
   <script>
-    // Firebaseの初期化
+    /// Firebaseの初期化
     const firebaseConfig = {
       apiKey: "AIzaSyCZYjVLic4JthtsHxubAGVgv0FdQ3mDTSM",
       authDomain: "one-yen-gambling.firebaseapp.com",
@@ -263,6 +263,27 @@
     function updateCoinDisplay() {
       document.getElementById('coin-count').textContent = `コイン: ${coinCount}枚`;
     }
+
+    // 初回読み込み時にコインカウントを取得
+    coinRef.once('value').then((snapshot) => {
+      if (snapshot.exists()) {
+        coinCount = snapshot.val();
+      } else {
+        // 初期コイン枚数を設定
+        coinRef.set(coinCount);
+      }
+      updateCoinDisplay();
+    });
+
+    // コインカウントを定期的に取得する関数
+    setInterval(() => {
+      coinRef.once('value').then((snapshot) => {
+        if (snapshot.exists()) {
+          coinCount = snapshot.val();
+          updateCoinDisplay();
+        }
+      });
+    }, 5000); // 1秒ごとに更新
 
     // 初回読み込み時にコインカウントを取得
     coinRef.once('value').then((snapshot) => {
