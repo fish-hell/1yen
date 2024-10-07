@@ -192,14 +192,15 @@
 
   <!-- メニュー -->
   <div class="menu" id="menu">
-    <label for="chat-name">チャット名を入力:</label>
     <input type="text" id="chat-name" placeholder="チャット名">
     <button id="set-chat-name">✔</button>
+    <br><br>
+    <button id="claim-bonus">ログインボーナス受け取り</button>
   </div>
 
   <!-- 1円ゲームコンテナ -->
   <div class="game-container" id="game-container">
-    <p>　　　　　　　　　　　1円ギャンブル v1.2</p>
+    <p>　　　　　　　　　　　1円ギャンブル v1.3</p>
     <div class="game-controls">
       <label>
         <input type="radio" name="bet-side" value="表" checked>
@@ -279,9 +280,15 @@
     // データベース参照
     const messagesRef = firebase.database().ref('messages');
     const coinRef = firebase.database().ref('coinCount');
+    const bonusRef = firebase.database().ref('loginBonusDate'); // ログインボーナスの日付を保存
 
     let chatName = "匿名"; // デフォルトのチャット名
     let coinCount = 10; // 初期コイン枚数
+
+    // チャット名をlocalStorageから読み込む
+    if (localStorage.getItem('chatName')) {
+      chatName = localStorage.getItem('chatName');
+    }
 
     // コインカウント表示を更新する関数
     function updateCoinDisplay() {
@@ -318,7 +325,8 @@
     // チャット名を設定
     document.getElementById('set-chat-name').addEventListener('click', () => {
       const nameInput = document.getElementById('chat-name');
-      chatName = nameInput.value || "匿名";
+      chatName = nameInput.value.trim() || "匿名";
+      localStorage.setItem('chatName', chatName); // localStorageに保存
       alert(`チャット名が "${chatName}" に設定されました`);
       document.getElementById('menu').style.display = 'none';
     });
@@ -487,6 +495,37 @@
           betButton.disabled = false;
         }, 3000);
       }, 2500); // アニメーション時間を2.5秒に設定
+    });
+
+    // ログインボーナスを受け取るボタンのクリックイベント
+    document.getElementById('claim-bonus').addEventListener('click', () => {
+      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD形式
+      bonusRef.once('value').then((snapshot) => {
+        const lastClaimDate = snapshot.val();
+        if (lastClaimDate === today) {
+          alert('本日は既に受け取っています。');
+        } else {
+          const dayOfWeek = new Date().getDay(); // 0: 日曜日, 6: 土曜日
+          let min, max;
+          if (dayOfWeek === 0 || dayOfWeek === 6) { // 土日
+            min = 10;
+            max = 20;
+          } else { // 平日
+            min = 5;
+            max = 15;
+          }
+          const bonus = Math.floor(Math.random() * (max - min + 1)) + min;
+          coinCount += bonus;
+          updateCoinDisplay();
+          coinRef.set(coinCount);
+          bonusRef.set(today); // 受け取った日を保存
+          alert(`ログインボーナスで${bonus}枚のコインを受け取りました。`);
+          sendMessage(`ログインボーナスで${bonus}枚のコインを受け取りました。`, "ゲームシステム");
+        }
+      }).catch((error) => {
+        console.error('ログインボーナスの取得エラー:', error);
+        alert('ログインボーナスの取得に失敗しました。');
+      });
     });
   </script>
 </body>
