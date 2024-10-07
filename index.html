@@ -166,8 +166,6 @@
     }
 
     .coin {
-      width: 50px;
-      height: 50px;
       background-size: cover;
       animation: flip 0.15s infinite;
     }
@@ -212,11 +210,37 @@
         裏
       </label>に
       <select id="bet-amount">
+        <!-- 1から30までのオプションを追加 -->
         <option value="1">1</option>
         <option value="2">2</option>
         <option value="3">3</option>
         <option value="4">4</option>
         <option value="5">5</option>
+        <option value="6">6</option>
+        <option value="7">7</option>
+        <option value="8">8</option>
+        <option value="9">9</option>
+        <option value="10">10</option>
+        <option value="11">11</option>
+        <option value="12">12</option>
+        <option value="13">13</option>
+        <option value="14">14</option>
+        <option value="15">15</option>
+        <option value="16">16</option>
+        <option value="17">17</option>
+        <option value="18">18</option>
+        <option value="19">19</option>
+        <option value="20">20</option>
+        <option value="21">21</option>
+        <option value="22">22</option>
+        <option value="23">23</option>
+        <option value="24">24</option>
+        <option value="25">25</option>
+        <option value="26">26</option>
+        <option value="27">27</option>
+        <option value="28">28</option>
+        <option value="29">29</option>
+        <option value="30">30</option>
       </select>
       枚　　
       <button id="bet-button">ベット</button>
@@ -283,18 +307,7 @@
           updateCoinDisplay();
         }
       });
-    }, 5000); // 1秒ごとに更新
-
-    // 初回読み込み時にコインカウントを取得
-    coinRef.once('value').then((snapshot) => {
-      if (snapshot.exists()) {
-        coinCount = snapshot.val();
-      } else {
-        // 初期コイン枚数を設定
-        coinRef.set(coinCount);
-      }
-      updateCoinDisplay();
-    });
+    }, 5000); // 5秒ごとに更新
 
     // メニューボタンのクリックイベント
     document.getElementById('menu-button').addEventListener('click', () => {
@@ -363,6 +376,23 @@
       }
     });
 
+    // ベット金額に応じたコインサイズを取得する関数
+    function getCoinSize(betAmount) {
+      if (betAmount >= 1 && betAmount <= 2) {
+        return '50px'; // 100%
+      } else if (betAmount >= 3 && betAmount <= 5) {
+        return '35px'; // 70%
+      } else if (betAmount >= 6 && betAmount <= 10) {
+        return '25px'; // 50%
+      } else if (betAmount >= 11 && betAmount <= 20) {
+        return '20px'; // 30%
+      } else if (betAmount >= 21 && betAmount <= 30) {
+        return '15px'; // 20%
+      } else {
+        return '50px'; // デフォルト
+      }
+    }
+
     // 1円ゲームのロジック
     document.getElementById('bet-button').addEventListener('click', () => {
       const betButton = document.getElementById('bet-button');
@@ -372,8 +402,8 @@
       const resultContainer = document.getElementById('result');
 
       // ベット金額の確認
-      if (betAmount < 1 || betAmount > 5) {
-        alert('ベット金額は1から5の間で選択してください');
+      if (betAmount < 1 || betAmount > 30) {
+        alert('ベット金額は1から30の間で選択してください');
         return;
       }
 
@@ -391,12 +421,18 @@
 
       const totalCoins = betAmount * 2;
 
+      // ベット金額に応じたコインサイズを取得
+      const coinSize = getCoinSize(betAmount);
+
       // コインを生成
       for (let i = 0; i < totalCoins; i++) {
         const coin = document.createElement('div');
         coin.classList.add('coin');
         // 初期表示は表
         coin.style.backgroundImage = 'url("omote.png")';
+        // サイズを設定
+        coin.style.width = coinSize;
+        coin.style.height = coinSize;
         coinsContainer.appendChild(coin);
       }
 
@@ -446,16 +482,11 @@
         // チャットに結果を送信
         sendMessage(`${selectedSide}にBETして${userWin}枚獲得しました。コイン: ${coinCount}枚 ${netChangeText}`, "ゲームシステム");
 
-        // 5秒後にBETボタンを再有効化
+        // 3秒後にBETボタンを再有効化
         setTimeout(() => {
           betButton.disabled = false;
         }, 3000);
-      }, 2500); // アニメーション時間を1.5秒に調整
-
-      // BETボタンを再有効化するタイマーを設定（合計6.5秒後）
-      setTimeout(() => {
-        betButton.disabled = false;
-      }, 1500 + 5000); // 1.5秒 + 5秒 = 6.5秒
+      }, 2500); // アニメーション時間を2.5秒に設定
     });
   </script>
 </body>
