@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -373,44 +372,27 @@ function formatMessage(text) {
   return text;
 }
 
-let volume = 1;
-
-const volumeSlider = document.getElementById('volume-slider');
-volumeSlider.addEventListener('input', (event) => {
-  volume = event.target.value / 100; // スライダーの値を0.01〜1.5に変換
-});
-
-// メッセージ受信時に通知音を鳴らす関数
-function playNotificationSound() {
-  const audio = new Audio('notification.mp3');
-  audio.volume = volume; // 設定された音量を適用
-  audio.play();
-}
-
 // チャットメッセージを受信する関数
 messagesRef.on('child_added', (snapshot) => {
   const message = snapshot.val();
   const time = new Date(message.timestamp).toLocaleTimeString();
 
-  // ゲームシステム以外からのメッセージに対して音を鳴らす
-  if (message.sender !== "ゲームシステム") {
-    playNotificationSound();
-  }
-
   const messageElement = document.createElement('div');
   messageElement.classList.add('message');
+
+  // 書式を適用
+  const formattedText = formatMessage(message.text);
   messageElement.innerHTML = `
     <div class="meta-info">
       <span class="sender-name">${message.sender}</span>
       <span class="timestamp">${time}</span>
     </div>
-    <div class="text">${message.text}</div>
+    <div class="text">${formattedText}</div>
   `;
 
   document.getElementById('chat-messages').appendChild(messageElement);
   document.getElementById('chat-messages').scrollTop = document.getElementById('chat-messages').scrollHeight;
 });
-
 
 
 
