@@ -190,16 +190,13 @@
     <input type="text" id="chat-name" placeholder="チャット名">
     <button id="set-chat-name">✔</button>
     <br><br>
-    <button id="claim-bonus">ログインボーナス受け取り</button>
-    <br><br>
-    <label for="volume-slider">音量:</label>
-    <input type="range" id="volume-slider" min="0" max="150" value="100">
+    <button id="claim-bonus">ログインボーナス抽選</button>
   </div>
   
 
   <!-- 1円ゲームコンテナ -->
   <div class="game-container" id="game-container">
-    <p>　　　　　　　　　　　1円ギャンブル v1.4</p>
+    <p>　　　　　　　　　　　1円ギャンブル v1.5</p>
     <div class="game-controls">
       <label>
         <input type="radio" name="bet-side" value="表" checked>
@@ -531,7 +528,7 @@ document.getElementById('claim-bonus').addEventListener('click', () => {
 
     // すでに受け取っている場合
     if (lastClaimDate === today) {
-      alert('本日は既にログインボーナスを受け取っています。');
+      alert('本日は抽選済みです。');
       return; 
     }
 
@@ -547,6 +544,7 @@ document.getElementById('claim-bonus').addEventListener('click', () => {
       sendMessage(`ログインボーナスで${bonus}枚のコインを受け取りました。`, "ゲームシステム");
     } else {
       alert('残念、はずれでした。');
+      sendMessage(`ログインボーナス抽選ははずれでした。`, "ゲームシステム");
     }
 
     // 受け取った日をloginBonusDateに保存
