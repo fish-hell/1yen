@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -24,11 +25,6 @@
       font-size: 24px;
       cursor: pointer;
       z-index: 100;
-    }
-
-    .menu-button img {
-      width: 30px;
-      height: 30px;
     }
 
     /* メニューのスタイル */
@@ -196,11 +192,15 @@
     <button id="set-chat-name">✔</button>
     <br><br>
     <button id="claim-bonus">ログインボーナス受け取り</button>
+    <br><br>
+    <label for="volume-slider">音量:</label>
+    <input type="range" id="volume-slider" min="0" max="150" value="100">
   </div>
+  
 
   <!-- 1円ゲームコンテナ -->
   <div class="game-container" id="game-container">
-    <p>　　　　　　　　　　　1円ギャンブル v1.3</p>
+    <p>　　　　　　　　　　　1円ギャンブル v1.4</p>
     <div class="game-controls">
       <label>
         <input type="radio" name="bet-side" value="表" checked>
@@ -314,7 +314,7 @@
           updateCoinDisplay();
         }
       });
-    }, 5000); // 5秒ごとに更新
+    }, 3000); // 3秒ごとに更新
 
     // メニューボタンのクリックイベント
     document.getElementById('menu-button').addEventListener('click', () => {
@@ -347,24 +347,72 @@
       messagesRef.push(newMessage);
     }
 
-    // チャットメッセージを受信する関数
-    messagesRef.on('child_added', (snapshot) => {
-      const message = snapshot.val();
-      const time = new Date(message.timestamp).toLocaleTimeString();
 
-      const messageElement = document.createElement('div');
-      messageElement.classList.add('message');
-      messageElement.innerHTML = `
-        <div class="meta-info">
-          <span class="sender-name">${message.sender}</span>
-          <span class="timestamp">${time}</span>
-        </div>
-        <div class="text">${message.text}</div>
-      `;
 
-      document.getElementById('chat-messages').appendChild(messageElement);
-      document.getElementById('chat-messages').scrollTop = document.getElementById('chat-messages').scrollHeight;
-    });
+
+ // 書式を処理する関数
+function formatMessage(text) {
+  // 太字
+  text = text.replace(/\[b\](.*?)(?=\[|$)/g, '<b>$1</b>');
+  // 斜体
+  text = text.replace(/\[i\](.*?)(?=\[|$)/g, '<em>$1</em>');
+  // 取り消し線
+  text = text.replace(/\[s\](.*?)(?=\[|$)/g, '<s>$1</s>');
+  // 下線
+  text = text.replace(/\[u\](.*?)(?=\[|$)/g, '<u>$1</u>');
+  // 大き目
+  text = text.replace(/\[1\](.*?)(?=\[|$)/g, '<span style="font-size: 1.7em;">$1</span>');
+  // 少し大きめ
+  text = text.replace(/\[2\](.*?)(?=\[|$)/g, '<span style="font-size: 1.3em;">$1</span>');
+  // 小さ目
+  text = text.replace(/\[3\](.*?)(?=\[|$)/g, '<span style="font-size: 0.7em;">$1</span>');
+  
+  // 色
+  text = text.replace(/\[([a-zA-Z]+|#[0-9a-fA-F]{6})\](.*?)(?=\[|$)/g, '<font color="$1">$2</font>');
+
+  return text;
+}
+
+let volume = 1;
+
+const volumeSlider = document.getElementById('volume-slider');
+volumeSlider.addEventListener('input', (event) => {
+  volume = event.target.value / 100; // スライダーの値を0.01〜1.5に変換
+});
+
+// メッセージ受信時に通知音を鳴らす関数
+function playNotificationSound() {
+  const audio = new Audio('notification.mp3');
+  audio.volume = volume; // 設定された音量を適用
+  audio.play();
+}
+
+// チャットメッセージを受信する関数
+messagesRef.on('child_added', (snapshot) => {
+  const message = snapshot.val();
+  const time = new Date(message.timestamp).toLocaleTimeString();
+
+  // ゲームシステム以外からのメッセージに対して音を鳴らす
+  if (message.sender !== "ゲームシステム") {
+    playNotificationSound();
+  }
+
+  const messageElement = document.createElement('div');
+  messageElement.classList.add('message');
+  messageElement.innerHTML = `
+    <div class="meta-info">
+      <span class="sender-name">${message.sender}</span>
+      <span class="timestamp">${time}</span>
+    </div>
+    <div class="text">${message.text}</div>
+  `;
+
+  document.getElementById('chat-messages').appendChild(messageElement);
+  document.getElementById('chat-messages').scrollTop = document.getElementById('chat-messages').scrollHeight;
+});
+
+
+
 
     // 送信ボタンのクリックイベント
     document.getElementById('send-button').addEventListener('click', () => {
@@ -408,12 +456,6 @@
       const betAmount = parseInt(document.getElementById('bet-amount').value);
       const coinsContainer = document.getElementById('coins-container');
       const resultContainer = document.getElementById('result');
-
-      // ベット金額の確認
-      if (betAmount < 1 || betAmount > 30) {
-        alert('ベット金額は1から30の間で選択してください');
-        return;
-      }
 
       if (coinCount < betAmount) {
         alert('コインが不足しています');
@@ -488,7 +530,7 @@
         resultContainer.textContent = `結果: 表 ${headsCount} 裏 ${tailsCount} | 獲得枚数: ${userWin}枚 ${netChangeText}`;
 
         // チャットに結果を送信
-        sendMessage(`${selectedSide}にBETして${userWin}枚獲得しました。コイン: ${coinCount}枚 ${netChangeText}`, "ゲームシステム");
+        sendMessage(`${selectedSide}に${betAmount}枚BETして${userWin}枚獲得。コイン: ${coinCount}枚 ${netChangeText}`, "ゲームシステム");
 
         // 3秒後にBETボタンを再有効化
         setTimeout(() => {
@@ -498,35 +540,41 @@
     });
 
     // ログインボーナスを受け取るボタンのクリックイベント
-    document.getElementById('claim-bonus').addEventListener('click', () => {
-      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD形式
-      bonusRef.once('value').then((snapshot) => {
-        const lastClaimDate = snapshot.val();
-        if (lastClaimDate === today) {
-          alert('本日は既に受け取っています。');
-        } else {
-          const dayOfWeek = new Date().getDay(); // 0: 日曜日, 6: 土曜日
-          let min, max;
-          if (dayOfWeek === 0 || dayOfWeek === 6) { // 土日
-            min = 10;
-            max = 20;
-          } else { // 平日
-            min = 5;
-            max = 15;
-          }
-          const bonus = Math.floor(Math.random() * (max - min + 1)) + min;
-          coinCount += bonus;
-          updateCoinDisplay();
-          coinRef.set(coinCount);
-          bonusRef.set(today); // 受け取った日を保存
-          alert(`ログインボーナスで${bonus}枚のコインを受け取りました。`);
-          sendMessage(`ログインボーナスで${bonus}枚のコインを受け取りました。`, "ゲームシステム");
-        }
-      }).catch((error) => {
-        console.error('ログインボーナスの取得エラー:', error);
-        alert('ログインボーナスの取得に失敗しました。');
-      });
-    });
+document.getElementById('claim-bonus').addEventListener('click', () => {
+  const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD形式
+
+  // loginBonusDateを参照
+  bonusRef.once('value').then((snapshot) => {
+    const lastClaimDate = snapshot.val();
+
+    // すでに受け取っている場合
+    if (lastClaimDate === today) {
+      alert('本日は既にログインボーナスを受け取っています。');
+      return; 
+    }
+
+    const randomChance = Math.random(); // 0から1の乱数を生成
+
+    // 30%の確率でボーナスを付与
+    if (randomChance < 0.3) { 
+      const bonus = Math.floor(Math.random() * 5) + 1; // 1から5コインのランダムなボーナス
+      coinCount += bonus;
+      updateCoinDisplay();
+      coinRef.set(coinCount);
+      alert(`おめでとうございます。ログインボーナスで${bonus}枚のコインを受け取りました。`);
+      sendMessage(`ログインボーナスで${bonus}枚のコインを受け取りました。`, "ゲームシステム");
+    } else {
+      alert('残念、はずれでした。');
+    }
+
+    // 受け取った日をloginBonusDateに保存
+    bonusRef.set(today);
+  }).catch((error) => {
+    alert('ログインボーナスの取得に失敗しました。');
+  });
+});
+
+
   </script>
 </body>
 </html>
