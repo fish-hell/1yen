@@ -444,6 +444,10 @@ messagesRef.on('child_added', (snapshot) => {
         return '20px'; // 30%
       } else if (betAmount >= 21 && betAmount <= 30) {
         return '15px'; // 20%
+      } else if (betAmount >= 31 && betAmount <= 40) {
+        return '10px'; // 20%
+      } else if (betAmount >= 41 && betAmount <= 50) {
+        return '7px'; // 20%
       } else {
         return '50px'; // デフォルト
       }
