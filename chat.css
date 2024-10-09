@@ -4,3 +4,11 @@
   background-clip: text;
   color: transparent;
 }
+
+.gold {
+  background: linear-gradient(0deg, #cccc00, #bbbb00, #ffffcc, #bbbb00,#aaaa00);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
