@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>1円ギャンブル オンライン</title>
+  <link rel="stylesheet" href="chat.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* メニューボタンのスタイル */
+    .menu-button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: transparent;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      z-index: 100;
+    }
+
+    /* メニューのスタイル */
+    .menu {
+      display: none;
+      position: absolute;
+      top: 50px;
+      right: 10px;
+      background-color: rgba(255, 255, 255, 0.9);
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      z-index: 100;
+    }
+
+    /* コインカウント表示 */
+    .coin-count {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background-color: #ffeb3b;
+      padding: 10px 20px;
+      border-radius: 5px;
+      font-weight: bold;
+      z-index: 100;
+    }
+
+    /* チャットコンテナのレイアウト */
+    .chat-container {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      height: 50%;
+      background-color: #f1f1f1;
+      border-top: 2px solid #ddd;
+      padding: 10px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chat-messages {
+      overflow-y: auto;
+      flex-grow: 1;
+      margin-bottom: 10px;
+    }
+
+    .message-input-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    #message-input {
+      width: 80%;
+      padding: 8px;
+    }
+
+    #send-button {
+      padding: 8px 16px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    .message {
+      padding: 5px;
+      margin-bottom: 10px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .meta-info {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85em;
+      color: #555;
+    }
+
+    .text {
+      margin-top: 5px;
+    }
+
+    /* 1円ゲームのスタイル */
+    .game-container {
+      padding: 20px;
+      background-color: #fafafa;
+      border-bottom: 2px solid #ddd;
+    }
+
+    .game-container h2 {
+      margin-top: 0;
+    }
+
+    .game-controls {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .game-controls label {
+      margin-right: 10px;
+    }
+
+    .game-controls input[type="radio"] {
+      margin-right: 5px;
+    }
+
+    .game-controls select {
+      margin: 0 10px;
+      padding: 5px;
+    }
+
+    #bet-button {
+      padding: 8px 16px;
+      background-color: #2196F3;
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    #bet-button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+
+    .coins-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .coin {
+      background-size: cover;
+      animation: flip 0.15s infinite;
+    }
+
+    @keyframes flip {
+      0% { transform: rotateY(0deg); }
+      50% { transform: rotateY(360deg); }
+      100% { transform: rotateY(0deg); }
+    }
+
+    .result {
+      text-align: center;
+      font-size: 1.2em;
+      font-weight: bold;
+    }
+  
+     input[type=color] {
+       height: 35px;
+     }
+  </style>
+</head>
+<body>
+  <!-- コインカウント表示 -->
+  <div class="coin-count" id="coin-count">コイン: 読み込み中</div>
+
+  <!-- メニューボタン -->
+  <button class="menu-button" id="menu-button">︙</button>
+
+  <!-- メニュー -->
+  <div class="menu" id="menu">
+    <input type="text" id="chat-name" placeholder="チャット名">
+    <button id="set-chat-name">✔</button>
+    <br><br>
+    <button id="claim-bonus">ログインボーナス抽選</button>
+  </div>
+  
+
+  <!-- 1円ゲームコンテナ -->
+  <div class="game-container" id="game-container">
+    <p>　　　　　　　　　　　1円ギャンブル v1.7</p>
+    <div class="game-controls">
+      <label>
+        <input type="radio" name="bet-side" value="表" checked>
+        表
+      </label>
+      <label>
+        <input type="radio" name="bet-side" value="裏">
+        裏
+      </label>に
+      <select id="bet-amount">
+        <!-- 1から30までのオプションを追加 -->
+        <option value="1">1</option>
+<option value="2">2</option>
+<option value="3">3</option>
+<option value="4">4</option>
+<option value="5">5</option>
+<option value="6">6</option>
+<option value="7">7</option>
+<option value="8">8</option>
+<option value="9">9</option>
+<option value="10">10</option>
+<option value="11">11</option>
+<option value="12">12</option>
+<option value="13">13</option>
+<option value="14">14</option>
+<option value="15">15</option>
+<option value="16">16</option>
+<option value="17">17</option>
+<option value="18">18</option>
+<option value="19">19</option>
+<option value="20">20</option>
+<option value="21">21</option>
+<option value="22">22</option>
+<option value="23">23</option>
+<option value="24">24</option>
+<option value="25">25</option>
+<option value="26">26</option>
+<option value="27">27</option>
+<option value="28">28</option>
+<option value="29">29</option>
+<option value="30">30</option>
+<option value="31">31</option>
+<option value="32">32</option>
+<option value="33">33</option>
+<option value="34">34</option>
+<option value="35">35</option>
+<option value="36">36</option>
+<option value="37">37</option>
+<option value="38">38</option>
+<option value="39">39</option>
+<option value="40">40</option>
+<option value="41">41</option>
+<option value="42">42</option>
+<option value="43">43</option>
+<option value="44">44</option>
+<option value="45">45</option>
+<option value="46">46</option>
+<option value="47">47</option>
+<option value="48">48</option>
+<option value="49">49</option>
+<option value="50">50</option>
+
+      </select>
+      枚　　
+      <button id="bet-button">ベット</button>
+    </div>
+    <div class="coins-container" id="coins-container"></div>
+    <div class="result" id="result"></div>
+  </div>
+
+  <!-- チャット (常に表示) -->
+  <div id="chat-container" class="chat-container">
+    <div id="chat-messages" class="chat-messages"></div>
+
+    <div class="message-input-container">
+      <input type="color" value="#000000" id="colorinput" oninput="changeChatColor()">
+      <input type="text" id="message-input" placeholder="メッセージを入力">
+      <button id="send-button">➡</button>
+    </div>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  
+  <script>
+    /// Firebaseの初期化
+    const firebaseConfig = {
+      apiKey: "AIzaSyCZYjVLic4JthtsHxubAGVgv0FdQ3mDTSM",
+      authDomain: "one-yen-gambling.firebaseapp.com",
+      projectId: "one-yen-gambling",
+      storageBucket: "one-yen-gambling.appspot.com",
+      messagingSenderId: "649927241844",
+      appId: "1:649927241844:web:20d3688537b9f0da5ba121",
+      measurementId: "G-MFG9548W5S"
+    };
+    firebase.initializeApp(firebaseConfig);
+
+    // データベース参照
+    const messagesRef = firebase.database().ref('messages');
+    const coinRef = firebase.database().ref('coinCount');
+    const bonusRef = firebase.database().ref('loginBonusDate'); // ログインボーナスの日付を保存
+
+    let chatName = "匿名"; // デフォルトのチャット名
+    let coinCount = 10; // 初期コイン枚数
+
+    // チャット名をlocalStorageから読み込む
+    if (localStorage.getItem('chatName')) {
+      chatName = localStorage.getItem('chatName');
+    }
+
+    // コインカウント表示を更新する関数
+    function updateCoinDisplay() {
+      document.getElementById('coin-count').textContent = `コイン: ${coinCount}枚`;
+    }
+
+    // 初回読み込み時にコインカウントを取得
+    coinRef.once('value').then((snapshot) => {
+      if (snapshot.exists()) {
+        coinCount = snapshot.val();
+      } else {
+        // 初期コイン枚数を設定
+        coinRef.set(coinCount);
+      }
+      updateCoinDisplay();
+    });
+
+    // コインカウントを定期的に取得する関数
+    setInterval(() => {
+      coinRef.once('value').then((snapshot) => {
+        if (snapshot.exists()) {
+          coinCount = snapshot.val();
+          updateCoinDisplay();
+        }
+      });
+    }, 3000); // 3秒ごとに更新
+
+    // メニューボタンのクリックイベント
+    document.getElementById('menu-button').addEventListener('click', () => {
+      const menu = document.getElementById('menu');
+      menu.style.display = menu.style.display === 'none' || menu.style.display === '' ? 'block' : 'none';
+    });
+
+    // チャット名を設定
+    document.getElementById('set-chat-name').addEventListener('click', () => {
+      const nameInput = document.getElementById('chat-name');
+      chatName = nameInput.value.trim() || "匿名";
+      localStorage.setItem('chatName', chatName); // localStorageに保存
+      alert(`チャット名が "${chatName}" に設定されました`);
+      document.getElementById('menu').style.display = 'none';
+    });
+
+    // チャットメッセージを送信する関数
+    function sendMessage(message, sender) {
+      if (message.trim() === '') {
+        alert('メッセージを入力してください');
+        return;
+      }
+
+      const newMessage = {
+        text: message,
+        timestamp: firebase.database.ServerValue.TIMESTAMP,
+        sender: sender || "匿名"
+      };
+
+      messagesRef.push(newMessage);
+    }
+
+
+
+
+ // 書式を処理する関数
+function formatMessage(text) {
+  // 太字
+  text = text.replace(/\[b\](.*?)(?=\[|$)/g, '<b>$1</b>');
+  // 斜体
+  text = text.replace(/\[i\](.*?)(?=\[|$)/g, '<em>$1</em>');
+  // 取り消し線
+  text = text.replace(/\[s\](.*?)(?=\[|$)/g, '<s>$1</s>');
+  // 下線
+  text = text.replace(/\[u\](.*?)(?=\[|$)/g, '<u>$1</u>');
+  // 大き目
+  text = text.replace(/\[1\](.*?)(?=\[|$)/g, '<span style="font-size: 1.7em;">$1</span>');
+  // 少し大きめ
+  text = text.replace(/\[2\](.*?)(?=\[|$)/g, '<span style="font-size: 1.3em;">$1</span>');
+  // 小さ目
+  text = text.replace(/\[3\](.*?)(?=\[|$)/g, '<span style="font-size: 0.7em;">$1</span>');
+  
+  // 色
+  text = text.replace(/\[([a-zA-Z]+|#[0-9a-fA-F]{6})\](.*?)(?=\[|$)/g, '<font color="$1">$2</font>');
+
+  return text;
+}
+
+// チャットメッセージを受信する関数
+messagesRef.on('child_added', (snapshot) => {
+  const message = snapshot.val();
+  const time = new Date(message.timestamp).toLocaleTimeString();
+
+  const messageElement = document.createElement('div');
+  messageElement.classList.add('message');
+
+  // 書式を適用
+  const formattedText = formatMessage(message.text);
+  messageElement.innerHTML = `
+    <div class="meta-info">
+      <span class="sender-name">${message.sender}</span>
+      <span class="timestamp">${time}</span>
+    </div>
+    <div class="text">${formattedText}</div>
+  `;
+
+  document.getElementById('chat-messages').appendChild(messageElement);
+  document.getElementById('chat-messages').scrollTop = document.getElementById('chat-messages').scrollHeight;
+});
+
+
+
+    // 送信ボタンのクリックイベント
+    document.getElementById('send-button').addEventListener('click', () => {
+      const messageInput = document.getElementById('message-input');
+      const message = messageInput.value;
+      sendMessage(message, chatName);
+      messageInput.value = '';
+    });
+
+    // Enterキーでメッセージを送信するイベント
+    document.getElementById('message-input').addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        const messageInput = document.getElementById('message-input');
+        const message = messageInput.value;
+        sendMessage(message, chatName);
+        messageInput.value = '';
+      }
+    });
+
+    // ベット金額に応じたコインサイズを取得する関数
+    function getCoinSize(betAmount) {
+      if (betAmount >= 1 && betAmount <= 2) {
+        return '50px'; // 100%
+      } else if (betAmount >= 3 && betAmount <= 5) {
+        return '35px'; // 70%
+      } else if (betAmount >= 6 && betAmount <= 10) {
+        return '25px'; // 50%
+      } else if (betAmount >= 11 && betAmount <= 20) {
+        return '20px'; // 30%
+      } else if (betAmount >= 21 && betAmount <= 30) {
+        return '15px'; // 20%
+      } else if (betAmount >= 31 && betAmount <= 40) {
+        return '10px'; // 20%
+      } else if (betAmount >= 41 && betAmount <= 50) {
+        return '7px'; // 20%
+      } else {
+        return '50px'; // デフォルト
+      }
+    }
+
+    // 1円ゲームのロジック
+    document.getElementById('bet-button').addEventListener('click', () => {
+      const betButton = document.getElementById('bet-button');
+      const selectedSide = document.querySelector('input[name="bet-side"]:checked').value;
+      const betAmount = parseInt(document.getElementById('bet-amount').value);
+      const coinsContainer = document.getElementById('coins-container');
+      const resultContainer = document.getElementById('result');
+
+      if (coinCount < betAmount) {
+        alert('コインが不足しています');
+        return;
+      }
+
+      // BETボタンを無効化
+      betButton.disabled = true;
+
+      // クリア前の結果
+      coinsContainer.innerHTML = '';
+      resultContainer.textContent = '';
+
+      const totalCoins = betAmount * 2;
+
+      // ベット金額に応じたコインサイズを取得
+      const coinSize = getCoinSize(betAmount);
+
+      // コインを生成
+      for (let i = 0; i < totalCoins; i++) {
+        const coin = document.createElement('div');
+        coin.classList.add('coin');
+        // 初期表示は表
+        coin.style.backgroundImage = 'url("omote.png")';
+        // サイズを設定
+        coin.style.width = coinSize;
+        coin.style.height = coinSize;
+        coinsContainer.appendChild(coin);
+      }
+
+      const coins = document.querySelectorAll('.coin');
+
+      // ベット金額を一時的に減らす
+      coinCount -= betAmount;
+      updateCoinDisplay();
+
+      // Firebaseにコインカウントを一時的に保存
+      coinRef.set(coinCount);
+
+      // アニメーション後に結果を決定
+      setTimeout(() => {
+        let headsCount = 0;
+        let tailsCount = 0;
+
+        coins.forEach(coin => {
+          // ランダムに表か裏を決定
+          const isHeads = Math.random() < 0.5;
+          if (isHeads) {
+            coin.style.backgroundImage = 'url("omote.png")';
+            headsCount++;
+          } else {
+            coin.style.backgroundImage = 'url("ura.png")';
+            tailsCount++;
+          }
+          // アニメーションを停止
+          coin.style.animation = 'none';
+        });
+
+        // 結果を計算
+        let userWin = selectedSide === '表' ? headsCount : tailsCount;
+        let netChange = userWin - betAmount;
+
+        // コインの更新
+        coinCount += userWin;
+        updateCoinDisplay();
+
+        // Firebaseにコインカウントを保存
+        coinRef.set(coinCount);
+
+        // 結果を表示
+        const netChangeText = netChange >= 0 ? `(+${netChange})` : `(${netChange})`;
+        resultContainer.textContent = `結果: 表 ${headsCount} 裏 ${tailsCount} | 獲得枚数: ${userWin}枚 ${netChangeText}`;
+
+        // チャットに結果を送信
+        sendMessage(`${selectedSide}に${betAmount}枚BETして${userWin}枚獲得。コイン: ${coinCount}枚 ${netChangeText}`, "ゲームシステム");
+
+        // 3秒後にBETボタンを再有効化
+        setTimeout(() => {
+          betButton.disabled = false;
+        }, 3000);
+      }, 2500); // アニメーション時間を2.5秒に設定
+    });
+
+    // ログインボーナスを受け取るボタンのクリックイベント
+document.getElementById('claim-bonus').addEventListener('click', () => {
+  const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD形式
+
+  // loginBonusDateを参照
+  bonusRef.once('value').then((snapshot) => {
+    const lastClaimDate = snapshot.val();
+
+    // すでに受け取っている場合
+    if (lastClaimDate === today) {
+      alert('本日は抽選済みです。');
+      return; 
+    }
+
+    const randomChance = Math.random(); // 0から1の乱数を生成
+
+    // 30%の確率でボーナスを付与
+    if (randomChance < 0.3) { 
+      const bonus = Math.floor(Math.random() * 5) + 1; // 1から5コインのランダムなボーナス
+      coinCount += bonus;
+      updateCoinDisplay();
+      coinRef.set(coinCount);
+      alert(`おめでとうございます。ログインボーナスで${bonus}枚のコインを受け取りました。`);
+      sendMessage(`ログインボーナスで${bonus}枚のコインを受け取りました。`, "ゲームシステム");
+    } else {
+      alert('残念、はずれでした。');
+      sendMessage(`ログインボーナス抽選ははずれでした。`, "ゲームシステム");
+    }
+
+    // 受け取った日をloginBonusDateに保存
+    bonusRef.set(today);
+  }).catch((error) => {
+    alert('取得に失敗しました。インターネット接続を確認してください。');
+  });
+});
+　　　　
+  　function changeChatColor() {
+    const messageInput = document.getElementById('message-input');
+    const message = messageInput.value;
+    const chatColor = document.getElementById('colorinput').value;
+    messageInput.value = `[${chatColor}]${message}`;
+}
+  </script>
+</body>
+</html>
