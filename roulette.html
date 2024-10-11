@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>1円ルーレット オンライン</title>
+  <link rel="stylesheet" href="chat.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background-color: #f4f4f4;
+    }
+
+    /* メニューボタンのスタイル */
+    .menu-button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: transparent;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      z-index: 100;
+    }
+
+    /* メニューのスタイル */
+    .menu {
+      display: none;
+      position: absolute;
+      top: 50px;
+      right: 10px;
+      background-color: rgba(255, 255, 255, 0.9);
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      z-index: 100;
+    }
+
+    /* コインカウント表示 */
+    .coin-count {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background-color: #ffeb3b;
+      padding: 10px 20px;
+      border-radius: 5px;
+      font-weight: bold;
+      z-index: 100;
+    }
+
+    /* チャットコンテナのレイアウト */
+    .chat-container {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      height: 50%;
+      background-color: #f1f1f1;
+      border-top: 2px solid #ddd;
+      padding: 10px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chat-messages {
+      overflow-y: auto;
+      flex-grow: 1;
+      margin-bottom: 10px;
+    }
+
+    .message-input-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    #message-input {
+      width: 70%;
+      padding: 8px;
+    }
+
+    #colorinput {
+      height: 35px;
+      margin-right: 10px;
+    }
+
+    #send-button {
+      padding: 8px 16px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    .message {
+      padding: 5px;
+      margin-bottom: 10px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .meta-info {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85em;
+      color: #555;
+    }
+
+    .text {
+      margin-top: 5px;
+    }
+
+    /* ルーレットゲームのスタイル */
+    .roulette-game {
+      padding: 20px;
+      background-color: #e0f7fa;
+      border-bottom: 2px solid #ddd;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+    }
+
+    .roulette-controls {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .roulette-controls label {
+      margin-right: 10px;
+    }
+
+    .roulette-controls select {
+      margin: 0 10px;
+      padding: 5px;
+    }
+
+    #start-roulette-button,
+    #stop-roulette-button {
+      padding: 8px 16px;
+      background-color: #5722ff;
+      color: white;
+      border: none;
+      cursor: pointer;
+      margin-left: 10px;
+      transition: background-color 0.3s;
+    }
+
+    #start-roulette-button:disabled,
+    #stop-roulette-button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+
+    .roulette-container {
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
+      margin-bottom: 30px;
+    }
+
+    .roulette {
+      font-size: 3rem;
+      border: 3px solid #777;
+      padding: 10px;
+      width: 30px;
+      height: 30px;
+      margin: 0 10px;
+      text-align: center;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #fff;
+    }
+
+    .roulette.stopped {
+      animation: none;
+    }
+
+    /* 色設定 */
+    .num-1 { color: red; }
+    .num-2 { color: green; }
+    .num-3 { color: gold; }
+    .num-4 { color: blue; }
+    .num-5 { color: magenta; }
+
+    /* 結果表示 */
+    .roulette-result {
+      margin-top: 20px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    /* ログインボーナスボタン */
+    #claim-bonus {
+      padding: 8px 16px;
+      background-color: #ffc107;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+      transition: background-color 0.3s;
+    }
+
+    #claim-bonus:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+  <!-- コインカウント表示 -->
+  <div class="coin-count" id="coin-count">コイン: 読み込み中</div>
+
+  <!-- メニューボタン -->
+  <button class="menu-button" id="menu-button">︙</button>
+
+  <!-- メニュー -->
+  <div class="menu" id="menu">
+    <input type="text" id="chat-name" placeholder="チャット名">
+    <button id="set-chat-name">✔</button>
+    <br><br>
+    <button id="claim-bonus">ログインボーナス抽選</button>
+  </div>
+
+  <!-- ルーレットゲームコンテナ -->
+  <div class="roulette-game" id="roulette-game">
+    <p>　　　　　　　　1円ルーレット v1.0</p>
+
+    <!-- BET金額の選択 -->
+    <div class="roulette-controls">
+      <label for="roulette-bet-amount">BET金額:</label>
+      <select id="roulette-bet-amount">
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+      </select>
+      枚
+      <button id="start-roulette-button">スタート</button>
+      <button id="stop-roulette-button" disabled>ストップ</button>
+    </div>
+
+    <!-- ルーレット表示 -->
+    <div class="roulette-container">
+      <div id="roulette1" class="roulette num-1">1</div>
+      <div id="roulette2" class="roulette num-1">2</div>
+      <div id="roulette3" class="roulette num-1">3</div>
+      <div id="roulette4" class="roulette num-1">4</div>
+      <div id="roulette5" class="roulette num-1">5</div>
+    </div>
+
+    <!-- 結果表示 -->
+    <div class="roulette-result" id="roulette-result"></div>
+  </div>
+
+  <!-- チャット (常に表示) -->
+  <div id="chat-container" class="chat-container">
+    <div id="chat-messages" class="chat-messages"></div>
+
+    <div class="message-input-container">
+      <input type="color" value="#000000" id="colorinput" oninput="changeChatColor()">
+      <input type="text" id="message-input" placeholder="メッセージを入力">
+      <button id="send-button">➡</button>
+    </div>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+  <script>
+    // Firebaseの初期化
+    const firebaseConfig = {
+      apiKey: "AIzaSyCZYjVLic4JthtsHxubAGVgv0FdQ3mDTSM",
+      authDomain: "one-yen-gambling.firebaseapp.com",
+      projectId: "one-yen-gambling",
+      storageBucket: "one-yen-gambling.appspot.com",
+      messagingSenderId: "649927241844",
+      appId: "1:649927241844:web:20d3688537b9f0da5ba121",
+      measurementId: "G-MFG9548W5S"
+    };
+    firebase.initializeApp(firebaseConfig);
+
+    // データベース参照
+    const messagesRef = firebase.database().ref('messages');
+    const coinRef = firebase.database().ref('coinCount');
+    const bonusRef = firebase.database().ref('loginBonusDate'); // ログインボーナスの日付を保存
+
+    let chatName = "匿名"; // デフォルトのチャット名
+    let coinCount = 0; // 初期コイン枚数
+
+    // チャット名をlocalStorageから読み込む
+    if (localStorage.getItem('chatName')) {
+      chatName = localStorage.getItem('chatName');
+    }
+
+    // コインカウント表示を更新する関数
+    function updateCoinDisplay() {
+      document.getElementById('coin-count').textContent = `コイン: ${coinCount}枚`;
+    }
+
+    // 初回読み込み時にコインカウントを取得
+    coinRef.once('value').then((snapshot) => {
+      if (snapshot.exists()) {
+        coinCount = snapshot.val();
+      } else {
+        // 初期コイン枚数を設定
+        coinRef.set(coinCount);
+      }
+      updateCoinDisplay();
+    });
+
+    // コインカウントを定期的に取得する関数
+    setInterval(() => {
+      coinRef.once('value').then((snapshot) => {
+        if (snapshot.exists()) {
+          coinCount = snapshot.val();
+          updateCoinDisplay();
+        }
+      });
+    }, 3000); // 3秒ごとに更新
+
+    // メニューボタンのクリックイベント
+    document.getElementById('menu-button').addEventListener('click', () => {
+      const menu = document.getElementById('menu');
+      menu.style.display = menu.style.display === 'none' || menu.style.display === '' ? 'block' : 'none';
+    });
+
+    // チャット名を設定
+    document.getElementById('set-chat-name').addEventListener('click', () => {
+      const nameInput = document.getElementById('chat-name');
+      chatName = nameInput.value.trim() || "匿名";
+      localStorage.setItem('chatName', chatName); // localStorageに保存
+      alert(`チャット名が "${chatName}" に設定されました`);
+      document.getElementById('menu').style.display = 'none';
+    });
+
+    // チャットメッセージを送信する関数
+    function sendMessage(message, sender) {
+      if (message.trim() === '') {
+        alert('メッセージを入力してください');
+        return;
+      }
+
+      const newMessage = {
+        text: message,
+        timestamp: firebase.database.ServerValue.TIMESTAMP,
+        sender: sender || "匿名"
+      };
+
+      messagesRef.push(newMessage);
+    }
+
+    // 書式を処理する関数
+    function formatMessage(text) {
+  // 太字
+  text = text.replace(/\[b\](.*?)(?=\[|$)/g, '<b>$1</b>');
+  // 斜体
+  text = text.replace(/\[i\](.*?)(?=\[|$)/g, '<em>$1</em>');
+  // 取り消し線
+  text = text.replace(/\[s\](.*?)(?=\[|$)/g, '<s>$1</s>');
+  // 下線
+  text = text.replace(/\[u\](.*?)(?=\[|$)/g, '<u>$1</u>');
+  // 大き目
+  text = text.replace(/\[1\](.*?)(?=\[|$)/g, '<span style="font-size: 1.7em;">$1</span>');
+  // 少し大きめ
+  text = text.replace(/\[2\](.*?)(?=\[|$)/g, '<span style="font-size: 1.3em;">$1</span>');
+  // 小さ目
+  text = text.replace(/\[3\](.*?)(?=\[|$)/g, '<span style="font-size: 0.7em;">$1</span>');
+  
+  // 色
+  text = text.replace(/\[([a-zA-Z]+|#[0-9a-fA-F]{6})\](.*?)(?=\[|$)/g, '<font color="$1">$2</font>');
+
+  return text;
+}
+
+// チャットメッセージを受信する関数
+messagesRef.on('child_added', (snapshot) => {
+  const message = snapshot.val();
+  const time = new Date(message.timestamp).toLocaleTimeString();
+
+  const messageElement = document.createElement('div');
+  messageElement.classList.add('message');
+
+  // 書式を適用
+  const formattedText = formatMessage(message.text);
+  messageElement.innerHTML = `
+    <div class="meta-info">
+      <span class="sender-name">${message.sender}</span>
+      <span class="timestamp">${time}</span>
+    </div>
+    <div class="text">${formattedText}</div>
+  `;
+
+  document.getElementById('chat-messages').appendChild(messageElement);
+  document.getElementById('chat-messages').scrollTop = document.getElementById('chat-messages').scrollHeight;
+});
+
+    // 送信ボタンのクリックイベント
+    document.getElementById('send-button').addEventListener('click', () => {
+      const messageInput = document.getElementById('message-input');
+      const message = messageInput.value;
+      sendMessage(message, chatName);
+      messageInput.value = '';
+    });
+
+    // Enterキーでメッセージを送信するイベント
+    document.getElementById('message-input').addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        const messageInput = document.getElementById('message-input');
+        const message = messageInput.value;
+        sendMessage(message, chatName);
+        messageInput.value = '';
+      }
+    });
+
+    // コインサイズを取得する関数（BET金額に応じてサイズを変更）
+    function getCoinSize(betAmount) {
+      if (betAmount >= 1 && betAmount <= 2) {
+        return '50px'; // 100%
+      } else if (betAmount >= 3 && betAmount <= 5) {
+        return '35px'; // 70%
+      } else if (betAmount >= 6 && betAmount <= 10) {
+        return '25px'; // 50%
+      } else if (betAmount >= 11 && betAmount <= 20) {
+        return '20px'; // 30%
+      } else if (betAmount >= 21 && betAmount <= 30) {
+        return '15px'; // 20%
+      } else if (betAmount >= 31 && betAmount <= 40) {
+        return '10px'; // 20%
+      } else if (betAmount >= 41 && betAmount <= 50) {
+        return '7px'; // 20%
+      } else {
+        return '50px'; // デフォルト
+      }
+    }
+
+    // ルーレットゲームのロジック
+    const roulettes = [
+      document.getElementById('roulette1'),
+      document.getElementById('roulette2'),
+      document.getElementById('roulette3'),
+      document.getElementById('roulette4'),
+      document.getElementById('roulette5')
+    ];
+
+    let rouletteIntervals = [];
+    let stoppedCount = 0;
+    let rouletteStoppedNumbers = [];
+    let isRouletteRunning = false;
+    let currentBetAmount = 1; // 初期BET金額
+
+    // BET金額の選択イベント
+    document.getElementById('roulette-bet-amount').addEventListener('change', (event) => {
+      currentBetAmount = parseInt(event.target.value);
+    });
+
+    // スタートボタンのイベントリスナー
+    document.getElementById('start-roulette-button').addEventListener('click', () => {
+      if (!isRouletteRunning) {
+        // BET金額の確認
+        if (currentBetAmount < 1 || currentBetAmount > 3) {
+          alert('BET金額は1から3の間で選択してください');
+          return;
+        }
+
+        if (coinCount < currentBetAmount) {
+          alert('コインが不足しています');
+          return;
+        }
+
+        // BET金額をコインから差し引く
+        coinCount -= currentBetAmount;
+        updateCoinDisplay();
+        coinRef.set(coinCount);
+
+        // ゲーム開始
+        startRoulette();
+
+        // ボタンの状態を変更
+        document.getElementById('start-roulette-button').disabled = true;
+        document.getElementById('stop-roulette-button').disabled = false;
+
+        // 初期化
+        isRouletteRunning = true;
+        stoppedCount = 0;
+        rouletteStoppedNumbers = [];
+        document.getElementById('roulette-result').textContent = '';
+      }
+    });
+
+    // ストップボタンのイベントリスナー
+    document.getElementById('stop-roulette-button').addEventListener('click', () => {
+      if (isRouletteRunning) {
+        stopRoulette();
+      }
+    });
+
+    // ルーレットを開始する関数
+    function startRoulette() {
+      roulettes.forEach((roulette, index) => {
+        rouletteIntervals[index] = setInterval(() => {
+          const currentNumber = parseInt(roulette.textContent);
+          const nextNumber = currentNumber < 5 ? currentNumber + 1 : 1;
+          roulette.textContent = nextNumber;
+          updateColor(roulette, nextNumber);
+        }, 100); // 100msごとに更新
+      });
+    }
+
+    // ルーレットを停止する関数
+    function stopRoulette() {
+      if (stoppedCount < roulettes.length) {
+        clearInterval(rouletteIntervals[stoppedCount]);
+        const finalNumber = parseInt(roulettes[stoppedCount].textContent);
+        rouletteStoppedNumbers.push(finalNumber);
+        stoppedCount++;
+        roulettes[stoppedCount - 1].classList.add('stopped');
+      }
+
+      // すべてのルーレットが停止したか確認
+      if (stoppedCount === roulettes.length) {
+        // ゲーム終了
+        isRouletteRunning = false;
+        document.getElementById('stop-roulette-button').disabled = true;
+
+        // 結果を評価
+        evaluateRouletteResult();
+
+        // スタートボタンを再有効化
+        document.getElementById('start-roulette-button').disabled = false;
+      }
+    }
+
+    // ルーレットの結果を評価する関数
+    function evaluateRouletteResult() {
+      const counts = {};
+      rouletteStoppedNumbers.forEach(num => {
+        counts[num] = (counts[num] || 0) + 1;
+      });
+
+      let multiplier = 0; // 初期値を0に設定（コインを返さない）
+      let matchedNumbers = 0;
+
+      for (let num in counts) {
+        if (counts[num] >= 3 && counts[num] > matchedNumbers) {
+          matchedNumbers = counts[num];
+        }
+      }
+
+      if (matchedNumbers === 3) {
+        multiplier = 2;
+      } else if (matchedNumbers === 4) {
+        multiplier = 5;
+      } else if (matchedNumbers === 5) {
+        multiplier = 30;
+      }
+
+      if (multiplier > 0) {
+        const winnings = currentBetAmount * multiplier;
+
+        // コインを増やす
+        coinCount += winnings;
+        updateCoinDisplay();
+
+        // Firebaseにコインカウントを保存
+        coinRef.set(coinCount);
+
+        // 結果を表示
+        const resultText = `結果: 同じ数字${matchedNumbers}つ | 獲得: ${winnings}枚 (${multiplier}倍)`;
+        document.getElementById('roulette-result').textContent = resultText;
+
+        // チャットに結果を送信
+        sendMessage(`${matchedNumbers}つ同じ数字が揃い、${winnings}枚(${multiplier}倍)獲得。コイン: ${coinCount}枚`, "ゲームシステム");
+      } else {
+        // 結果を表示（コインを返さない）
+        const resultText = `結果: ${rouletteStoppedNumbers.join(', ')} | はずれ`;
+        document.getElementById('roulette-result').textContent = resultText;
+
+        // チャットに結果を送信
+        sendMessage(`ルーレット:はずれでした。コイン: ${coinCount}枚`, "ゲームシステム");
+      }
+    }
+
+    // ルーレットの色を更新する関数
+    function updateColor(roulette, number) {
+      roulette.className = 'roulette num-' + number;
+    }
+
+    // 初期色設定
+    roulettes.forEach((roulette, index) => {
+      updateColor(roulette, parseInt(roulette.textContent));
+    });
+
+    // ログインボーナスを受け取るボタンのクリックイベント
+    document.getElementById('claim-bonus').addEventListener('click', () => {
+      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD形式
+
+      // loginBonusDateを参照
+      bonusRef.once('value').then((snapshot) => {
+        const lastClaimDate = snapshot.val();
+
+        // すでに受け取っている場合
+        if (lastClaimDate === today) {
+          alert('本日は抽選済みです。');
+          return; 
+        }
+
+        const randomChance = Math.random(); // 0から1の乱数を生成
+
+        // 30%の確率でボーナスを付与
+        if (randomChance < 0.3) { 
+          const bonus = Math.floor(Math.random() * 5) + 1; // 1から5コインのランダムなボーナス
+          coinCount += bonus;
+          updateCoinDisplay();
+          coinRef.set(coinCount);
+          alert(`おめでとうございます。ログインボーナスで${bonus}枚のコインを受け取りました。`);
+          sendMessage(`ログインボーナスで${bonus}枚のコインを受け取りました。`, "ゲームシステム");
+        } else {
+          alert('残念、はずれでした。');
+          sendMessage(`ログインボーナス抽選ははずれでした。`, "ゲームシステム");
+        }
+
+        // 受け取った日をloginBonusDateに保存
+        bonusRef.set(today);
+      }).catch((error) => {
+        alert('取得に失敗しました。インターネット接続を確認してください。');
+      });
+    });
+
+    // チャットメッセージの色を変更する関数
+    function changeChatColor() {
+      const messageInput = document.getElementById('message-input');
+      const message = messageInput.value;
+      const chatColor = document.getElementById('colorinput').value;
+      messageInput.value = `[${chatColor}]${message}`;
+    }
+
+    // 最初にスタートボタンを無効化し、3秒後に有効化
+    document.getElementById('start-roulette-button').disabled = true;
+     
+    setTimeout(() => {
+      document.getElementById('start-roulette-button').disabled = false;
+    }, 3000);
+  </script>
+</body>
+  </html>
