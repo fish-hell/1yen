@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>1円ルーレット オンライン</title>
+  <title>ルーレットゲーム オンライン</title>
   <link rel="stylesheet" href="chat.css">
   <style>
     body {
@@ -541,55 +541,57 @@ messagesRef.on('child_added', (snapshot) => {
       }
     }
 
-    // ルーレットの結果を評価する関数
-    function evaluateRouletteResult() {
-      const counts = {};
-      rouletteStoppedNumbers.forEach(num => {
-        counts[num] = (counts[num] || 0) + 1;
-      });
+// ルーレットの結果を評価する関数
+function evaluateRouletteResult() {
+  const counts = {};
+  rouletteStoppedNumbers.forEach(num => {
+    counts[num] = (counts[num] || 0) + 1;
+  });
 
-      let multiplier = 0; // 初期値を0に設定（コインを返さない）
-      let matchedNumbers = 0;
+  let multiplier = 0; // 初期値を0に設定（コインを返さない）
+  let matchedNumbers = 0;
 
-      for (let num in counts) {
-        if (counts[num] >= 3 && counts[num] > matchedNumbers) {
-          matchedNumbers = counts[num];
-        }
-      }
-
-      if (matchedNumbers === 3) {
-        multiplier = 2;
-      } else if (matchedNumbers === 4) {
-        multiplier = 5;
-      } else if (matchedNumbers === 5) {
-        multiplier = 30;
-      }
-
-      if (multiplier > 0) {
-        const winnings = currentBetAmount * multiplier;
-
-        // コインを増やす
-        coinCount += winnings;
-        updateCoinDisplay();
-
-        // Firebaseにコインカウントを保存
-        coinRef.set(coinCount);
-
-        // 結果を表示
-        const resultText = `結果: 同じ数字${matchedNumbers}つ | 獲得: ${winnings}枚 (${multiplier}倍)`;
-        document.getElementById('roulette-result').textContent = resultText;
-
-        // チャットに結果を送信
-        sendMessage(`${matchedNumbers}つ同じ数字が揃い、${winnings}枚(${multiplier}倍)獲得。コイン: ${coinCount}枚`, "ゲームシステム");
-      } else {
-        // 結果を表示（コインを返さない）
-        const resultText = `結果: ${rouletteStoppedNumbers.join(', ')} | はずれ`;
-        document.getElementById('roulette-result').textContent = resultText;
-
-        // チャットに結果を送信
-        sendMessage(`ルーレット:はずれでした。コイン: ${coinCount}枚`, "ゲームシステム");
-      }
+  for (let num in counts) {
+    if (counts[num] >= 3 && counts[num] > matchedNumbers) {
+      matchedNumbers = counts[num];
     }
+  }
+
+  if (matchedNumbers === 3) {
+    multiplier = 2;
+  } else if (matchedNumbers === 4) {
+    multiplier = 5;
+  } else if (matchedNumbers === 5) {
+    multiplier = 30;
+  } else if (matchedNumbers === 0) {
+    multiplier = 4; // 同じ数字が無い場合は4倍
+  }
+
+  if (multiplier > 0) {
+    const winnings = currentBetAmount * multiplier;
+
+    // コインを増やす
+    coinCount += winnings;
+    updateCoinDisplay();
+
+    // Firebaseにコインカウントを保存
+    coinRef.set(coinCount);
+
+    // 結果を表示
+    const resultText = `結果: 同じ数字${matchedNumbers}つ | 獲得: ${winnings}枚 (${multiplier}倍)`;
+    document.getElementById('roulette-result').textContent = resultText;
+
+    // チャットに結果を送信
+    sendMessage(`${matchedNumbers}つ同じ数字が揃い、${winnings}枚(${multiplier}倍)獲得。コイン: ${coinCount}枚`, "ゲームシステム");
+  } else {
+    // 結果を表示（コインを返さない）
+    const resultText = `結果: ${rouletteStoppedNumbers.join(', ')} | はずれ`;
+    document.getElementById('roulette-result').textContent = resultText;
+
+    // チャットに結果を送信
+    sendMessage(`ルーレット:はずれでした。コイン: ${coinCount}枚`, "ゲームシステム");
+  }
+}
 
     // ルーレットの色を更新する関数
     function updateColor(roulette, number) {
@@ -653,4 +655,4 @@ messagesRef.on('child_added', (snapshot) => {
     }, 3000);
   </script>
 </body>
-  </html>
+</html>
