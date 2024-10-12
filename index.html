@@ -15,7 +15,6 @@
       flex-direction: column;
     }
 
-    /* メニューボタンのスタイル */
     .menu-button {
       position: absolute;
       top: 10px;
@@ -27,7 +26,14 @@
       z-index: 100;
     }
 
-    /* メニューのスタイル */
+    .textmenu-button {
+      background-color: transparent;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      z-index: 100;
+    }
+
     .menu {
       display: none;
       position: absolute;
@@ -40,7 +46,19 @@
       z-index: 100;
     }
 
-    /* コインカウント表示 */
+    .textmenu {
+      display: none;
+      position: absolute;
+      bottom: 50px;
+      left: 10px;
+      background-color: rgba(255, 255, 255, 0.9);
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      z-index: 1000;
+    } 
+    
+  
     .coin-count {
       position: absolute;
       top: 10px;
@@ -52,7 +70,6 @@
       z-index: 100;
     }
 
-    /* チャットコンテナのレイアウト */
     .chat-container {
       position: absolute;
       bottom: 0;
@@ -79,12 +96,13 @@
     }
 
     #message-input {
-      width: 80%;
+      width: calc(100% - 120px);
       padding: 8px;
     }
 
     #send-button {
       padding: 8px 16px;
+      height: 35px;
       background-color: #4CAF50;
       color: white;
       border: none;
@@ -108,7 +126,6 @@
       margin-top: 5px;
     }
 
-    /* 1円ゲームのスタイル */
     .game-container {
       padding: 20px;
       background-color: #fafafa;
@@ -177,18 +194,16 @@
       font-size: 1.2em;
       font-weight: bold;
     }
-  
-     input[type=color] {
-       height: 35px;
-     }
+
   </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
   <!-- コインカウント表示 -->
-  <div class="coin-count" id="coin-count">コイン: 読み込み中</div>
+  <div class="coin-count" id="coin-count">読み込み中</div>
 
   <!-- メニューボタン -->
-  <button class="menu-button" id="menu-button">︙</button>
+  <button class="menu-button" id="menu-button"><i class="fa-solid fa-bars"></i></button>
 
   <!-- メニュー -->
   <div class="menu" id="menu">
@@ -199,9 +214,33 @@
   </div>
   
 
+  <div class="textmenu" id="textmenu">
+    <input type="color" value="#000000" id="colorinput">
+    <label>
+      <input type="checkbox" value="b">
+      <b>B</b>
+      <input type="checkbox" value="i">
+      <i>I</i>
+      <input type="checkbox" value="s">
+      <s>S</s>
+      <input type="checkbox" value="u">
+      <u>U</u>
+    <br>
+    <input type="radio" name="fontsize" value="0" checked>
+    標準
+    <input type="radio" name="fontsize" value="1">
+    <span style="font-size: 1.7em;">大</span>
+    <input type="radio" name="fontsize" value="2">
+    <span style="font-size: 1.3em;">中</span>
+    <input type="radio" name="fontsize" value="3">
+    <span style="font-size: 0.7em">小</span>
+    </label>
+    <button onclick="applyText()">適用</button>
+  </div>
+
   <!-- 1円ゲームコンテナ -->
   <div class="game-container" id="game-container">
-    <p>　　　　　　　　　　　1円ギャンブル v1.7</p>
+    <p>　　　　　　　　　　　1円ギャンブル v1.8</p>
     <div class="game-controls">
       <label>
         <input type="radio" name="bet-side" value="表" checked>
@@ -277,9 +316,9 @@
     <div id="chat-messages" class="chat-messages"></div>
 
     <div class="message-input-container">
-      <input type="color" value="#000000" id="colorinput" oninput="changeChatColor()">
+      <button class="textmenu-button" id="textmenu-button"><i class="fa-solid fa-a" style="color: #FFD43B; vertical-align: top;"></i><i class="fa-solid fa-a fa-2xs" style="color: #B197FC;"></i></button>
       <input type="text" id="message-input" placeholder="メッセージを入力">
-      <button id="send-button">➡</button>
+      <button id="send-button"><i class="fa-solid fa-paper-plane"></i></button>
     </div>
   </div>
 
@@ -315,7 +354,8 @@
 
     // コインカウント表示を更新する関数
     function updateCoinDisplay() {
-      document.getElementById('coin-count').textContent = `コイン: ${coinCount}枚`;
+      document.getElementById('coin-count').innerHTML = `
+      <img src="omote.png" width="25px" alt="1円" style="vertical-align: middle; display:inline-block;">×${coinCount}枚`;
     }
 
     // 初回読み込み時にコインカウントを取得
@@ -343,6 +383,11 @@
     document.getElementById('menu-button').addEventListener('click', () => {
       const menu = document.getElementById('menu');
       menu.style.display = menu.style.display === 'none' || menu.style.display === '' ? 'block' : 'none';
+    });
+
+    document.getElementById('textmenu-button').addEventListener('click', () => {
+      const textmenu = document.getElementById('textmenu');
+      textmenu.style.display = textmenu.style.display === 'none' || textmenu.style.display === '' ? 'block' : 'none';
     });
 
     // チャット名を設定
@@ -373,21 +418,16 @@
 
 
 
- // 書式を処理する関数
+
 function formatMessage(text) {
-  // 太字
+
   text = text.replace(/\[b\](.*?)(?=\[|$)/g, '<b>$1</b>');
-  // 斜体
   text = text.replace(/\[i\](.*?)(?=\[|$)/g, '<em>$1</em>');
-  // 取り消し線
   text = text.replace(/\[s\](.*?)(?=\[|$)/g, '<s>$1</s>');
-  // 下線
   text = text.replace(/\[u\](.*?)(?=\[|$)/g, '<u>$1</u>');
-  // 大き目
+  text = text.replace(/\[0\](.*?)(?=\[|$)/g, '<span style="font-size: 1em;">$1</span>');
   text = text.replace(/\[1\](.*?)(?=\[|$)/g, '<span style="font-size: 1.7em;">$1</span>');
-  // 少し大きめ
   text = text.replace(/\[2\](.*?)(?=\[|$)/g, '<span style="font-size: 1.3em;">$1</span>');
-  // 小さ目
   text = text.replace(/\[3\](.*?)(?=\[|$)/g, '<span style="font-size: 0.7em;">$1</span>');
   
   // 色
@@ -540,7 +580,7 @@ messagesRef.on('child_added', (snapshot) => {
         resultContainer.textContent = `結果: 表 ${headsCount} 裏 ${tailsCount} | 獲得枚数: ${userWin}枚 ${netChangeText}`;
 
         // チャットに結果を送信
-        sendMessage(`${selectedSide}に${betAmount}枚BETして${userWin}枚獲得。コイン: ${coinCount}枚 ${netChangeText}`, "ゲームシステム");
+        sendMessage(`${selectedSide}に${betAmount}枚BETして${userWin}枚獲得。1円:${coinCount}枚 ${netChangeText}`, "ゲームシステム");
 
         // 3秒後にBETボタンを再有効化
         setTimeout(() => {
@@ -571,8 +611,8 @@ document.getElementById('claim-bonus').addEventListener('click', () => {
       coinCount += bonus;
       updateCoinDisplay();
       coinRef.set(coinCount);
-      alert(`おめでとうございます。ログインボーナスで${bonus}枚のコインを受け取りました。`);
-      sendMessage(`ログインボーナスで${bonus}枚のコインを受け取りました。`, "ゲームシステム");
+      alert(`おめでとうございます。ログインボーナスで${bonus}枚の1円を受け取りました。`);
+      sendMessage(`ログインボーナスで${bonus}枚の1円を受け取りました。`, "ゲームシステム");
     } else {
       alert('残念、はずれでした。');
       sendMessage(`ログインボーナス抽選ははずれでした。`, "ゲームシステム");
@@ -584,13 +624,56 @@ document.getElementById('claim-bonus').addEventListener('click', () => {
     alert('取得に失敗しました。インターネット接続を確認してください。');
   });
 });
-　　　　
-  　function changeChatColor() {
+
+function applyText() {
     const messageInput = document.getElementById('message-input');
     const message = messageInput.value;
+
+    // チェックボックスの状態を取得
+    const boldChecked = document.querySelector('input[value="b"]').checked;
+    const italicChecked = document.querySelector('input[value="i"]').checked;
+    const strikethroughChecked = document.querySelector('input[value="s"]').checked;
+    const underlineChecked = document.querySelector('input[value="u"]').checked;
+
+    // フォントサイズの選択を取得
+    const fontSize = document.querySelector('input[name="fontsize"]:checked').value;
+
+    if (boldChecked) {
+        Text1 = `[b]${message}`;
+    } else {
+      Text1 = message;
+    }
+    if (italicChecked) {
+        Text2 = `[i]${Text1}`;
+    } else {
+      Text2 = Text1 || message;
+    }
+    if (strikethroughChecked) {
+        Text3 = `[s]${Text2}`;
+    } else {
+      Text3 = Text2 || Text1 || message;
+    }
+    if (underlineChecked) {
+        Text4 = `[u]${Text3}`;
+    } else {
+      Text4 = Text3 || Text2 || Text1 || message ;
+    }
+
+
+    if (fontSize !== 0) {
+        Text5 = `[${fontSize}]${Text4}`;
+    } else {
+      Text5 = Text4 || Text3 || Text2 || Text1 || message;
+    }
+
     const chatColor = document.getElementById('colorinput').value;
-    messageInput.value = `[${chatColor}]${message}`;
+    formattedMessage = `[${chatColor}]${Text5}`;
+
+    messageInput.value = formattedMessage;
+
+    textmenu.style.display = 'none'
 }
+
   </script>
 </body>
 </html>
