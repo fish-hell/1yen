@@ -245,7 +245,7 @@
 
   <!-- 1円ゲームコンテナ -->
   <div class="game-container" id="game-container">
-    <p>　　　　　　　　　　　1円ギャンブル v2.0</p>
+    <p>　　　　　　　　　　　1円ギャンブル v2.0.1</p>
     <div class="game-controls">
       <label>
         <input type="radio" name="bet-side" value="表" checked>
@@ -505,17 +505,17 @@
   }
 
   function formatMessage(text) {
-    text = text.replace(/b(.*?)(?=|$)/g, '<b>$1</b>');
-    text = text.replace(/i(.*?)(?=|$)/g, '<em>$1</em>');
-    text = text.replace(/s(.*?)(?=|$)/g, '<s>$1</s>');
-    text = text.replace(/u(.*?)(?=|$)/g, '<u>$1</u>');
-    text = text.replace(/0(.*?)(?=|$)/g, '<span style="font-size: 1em;">$1</span>');
-    text = text.replace(/1(.*?)(?=|$)/g, '<span style="font-size: 1.7em;">$1</span>');
-    text = text.replace(/2(.*?)(?=|$)/g, '<span style="font-size: 1.3em;">$1</span>');
-    text = text.replace(/3(.*?)(?=|$)/g, '<span style="font-size: 0.7em;">$1</span>');
+    text = text.replace(/\[b\](.*?)(?=\[|$)/g, '<b>$1</b>');
+    text = text.replace(/\[i\](.*?)(?=\[|$)/g, '<em>$1</em>');
+    text = text.replace(/\[s\](.*?)(?=\[|$)/g, '<s>$1</s>');
+    text = text.replace(/\[u\](.*?)(?=\[|$)/g, '<u>$1</u>');
+    text = text.replace(/\[0\](.*?)(?=\[|$)/g, '<span style="font-size: 1em;">$1</span>');
+    text = text.replace(/\[1\](.*?)(?=\[|$)/g, '<span style="font-size: 1.7em;">$1</span>');
+    text = text.replace(/\[2\](.*?)(?=\[|$)/g, '<span style="font-size: 1.3em;">$1</span>');
+    text = text.replace(/\[3\](.*?)(?=\[|$)/g, '<span style="font-size: 0.7em;">$1</span>');
     
     // 色
-    text = text.replace(/([a-zA-Z]+|#[0-9a-fA-F]{6})(.*?)(?=|$)/g, '<span style="color:$1">$2</span>');
+    text = text.replace(/\[([a-zA-Z]+|#[0-9a-fA-F]{6})\](.*?)(?=\]|$)/g, '<span style="color:$1">$2</span>');
 
     return text;
   }
