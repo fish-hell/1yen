@@ -240,7 +240,7 @@
 
   <!-- 1円ゲームコンテナ -->
   <div class="game-container" id="game-container">
-    <p>　　　　　　　　　　　1円ギャンブル v1.8.2</p>
+    <p>　　　　　　　　　　　1円ギャンブル v1.9</p>
     <div class="game-controls">
       <label>
         <input type="radio" name="bet-side" value="表" checked>
@@ -552,7 +552,7 @@ messagesRef.on('child_added', (snapshot) => {
 
         coins.forEach(coin => {
           // ランダムに表か裏を決定
-          const isHeads = Math.random() < 0.55;
+          const isHeads = Math.random() < 0.53;
           if (isHeads) {
             coin.style.backgroundImage = 'url("omote.png")';
             headsCount++;
