@@ -552,7 +552,7 @@ messagesRef.on('child_added', (snapshot) => {
 
         coins.forEach(coin => {
           // ランダムに表か裏を決定
-          const isHeads = Math.random() < 0.4;
+          const isHeads = Math.random() < 0.55;
           if (isHeads) {
             coin.style.backgroundImage = 'url("omote.png")';
             headsCount++;
