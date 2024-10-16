@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -199,23 +200,25 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
-  <!-- コインカウント表示 -->
+
   <div class="coin-count" id="coin-count">読み込み中</div>
 
-  <!-- メニューボタン -->
   <button class="menu-button" id="menu-button"><i class="fa-solid fa-bars"></i></button>
 
-  <!-- メニュー -->
   <div class="menu" id="menu">
     <input type="text" id="chat-name" placeholder="チャット名">
     <button id="set-chat-name">✔</button>
     <br><br>
     <button id="claim-bonus">おみくじを引く</button>
     <br><br>
-    <!-- 確率設定の追加 -->
     <label for="prob-input">code</label><br>
     <input type="text" id="prob-input" placeholder="input code…">
     <button id="set-probabilities">✔</button>
+    <div id="active-users">
+      <p>参加中ユーザー</p>
+      <ul id="user-list"></ul>
+    </div>    
+    
   </div>
   
 
@@ -243,7 +246,6 @@
     <button onclick="applyText()">適用</button>
   </div>
 
-  <!-- 1円ゲームコンテナ -->
   <div class="game-container" id="game-container">
     <p>　　　　　　　　　　　1円ギャンブル v2.0.1</p>
     <div class="game-controls">
@@ -256,7 +258,6 @@
         裏
       </label>に
       <select id="bet-amount">
-        <!-- 1から50までのオプションを追加 -->
         <option value="1">1</option>
         <option value="2">2</option>
         <option value="3">3</option>
@@ -315,7 +316,6 @@
     <div class="result" id="result"></div>
   </div>
 
-  <!-- チャット (常に表示) -->
   <div id="chat-container" class="chat-container">
     <div id="chat-messages" class="chat-messages"></div>
 
@@ -331,7 +331,6 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
   
   <script>
-  /// Firebaseの初期化
   const firebaseConfig = {
     apiKey: "AIzaSyCZYjVLic4JthtsHxubAGVgv0FdQ3mDTSM",
     authDomain: "one-yen-gambling.firebaseapp.com",
@@ -343,33 +342,30 @@
   };
   firebase.initializeApp(firebaseConfig);
 
-  // データベース参照
+ 
   const messagesRef = firebase.database().ref('messages');
   const coinRef = firebase.database().ref('coinCount');
-  const bonusRef = firebase.database().ref('loginBonusDate'); // ログインボーナスの日付を保存
-  const probRef = firebase.database().ref('probabilities'); // 表裏の確率を保存
+  const bonusRef = firebase.database().ref('loginBonusDate');
+  const probRef = firebase.database().ref('probabilities');
+  const usersRef = firebase.database().ref('users');
 
-  let chatName = "匿名"; // デフォルトのチャット名
-  let coinCount = 10; // 初期コイン枚数
-  let baseProbability = 50; // 基本確率 n%
+  let chatName = "名無し";
+  let coinCount = 0;
+  let baseProbability = 50;
 
-  // チャット名をlocalStorageから読み込む
   if (localStorage.getItem('chatName')) {
     chatName = localStorage.getItem('chatName');
   }
 
-  // コインカウント表示を更新する関数
   function updateCoinDisplay() {
     document.getElementById('coin-count').innerHTML = `
     <img src="omote.png" width="25px" alt="1円" style="vertical-align: middle; display:inline-block;">×${coinCount}枚`;
   }
 
-  // 初回読み込み時にコインカウントと確率を取得
   coinRef.once('value').then((snapshot) => {
     if (snapshot.exists()) {
       coinCount = snapshot.val();
     } else {
-      // 初期コイン枚数を設定
       coinRef.set(coinCount);
     }
     updateCoinDisplay();
@@ -380,34 +376,27 @@
       const probs = snapshot.val();
       baseProbability = probs.n !== undefined ? probs.n : 50;
     } else {
-      // 初期確率を設定
       probRef.set({ n: baseProbability });
     }
     updateProbabilityDisplay();
   });
 
-  // コインカウントを定期的に取得する関数
-  setInterval(() => {
-    coinRef.once('value').then((snapshot) => {
-      if (snapshot.exists()) {
-        coinCount = snapshot.val();
-        updateCoinDisplay();
-      }
-    });
-  }, 3000); // 3秒ごとに更新
+coinRef.on('value', (snapshot) => {
+  if (snapshot.exists()) {
+    coinCount = snapshot.val();
+    updateCoinDisplay();
+  }
+});
 
-  // 確率を定期的に取得する関数
-  setInterval(() => {
-    probRef.once('value').then((snapshot) => {
-      if (snapshot.exists()) {
-        const probs = snapshot.val();
-        baseProbability = probs.n !== undefined ? probs.n : 50;
-        updateProbabilityDisplay();
-      }
-    });
-  }, 5000); // 5秒ごとに更新
+probRef.on('value', (snapshot) => {
+  if (snapshot.exists()) {
+    const probs = snapshot.val();
+    baseProbability = probs.n !== undefined ? probs.n : 50;
+    updateProbabilityDisplay();
+  }
+});
 
-  // メニューボタンのクリックイベント
+
   document.getElementById('menu-button').addEventListener('click', () => {
     const menu = document.getElementById('menu');
     menu.style.display = menu.style.display === 'none' || menu.style.display === '' ? 'block' : 'none';
@@ -418,29 +407,34 @@
     textmenu.style.display = textmenu.style.display === 'none' || textmenu.style.display === '' ? 'block' : 'none';
   });
 
-  // チャット名を設定
-  document.getElementById('set-chat-name').addEventListener('click', () => {
-    const nameInput = document.getElementById('chat-name');
-    chatName = nameInput.value.trim() || "匿名";
-    localStorage.setItem('chatName', chatName); // localStorageに保存
-    alert(`チャット名が "${chatName}" に設定されました`);
-    document.getElementById('menu').style.display = 'none';
-  });
 
-  // 確率設定を保存（c=コマンドも追加）
+  document.getElementById('set-chat-name').addEventListener('click', () => {
+  const nameInput = document.getElementById('chat-name');
+  chatName = nameInput.value.trim() || "名無し";
+  localStorage.setItem('chatName', chatName);
+
+  firebase.database().ref('users/' + chatName).set(true);
+
+  alert(`チャット名が "${chatName}" に設定されました`);
+  document.getElementById('menu').style.display = 'none';
+
+  updateUserList();
+});
+
+
+
+
   document.getElementById('set-probabilities').addEventListener('click', () => {
     const probInput = document.getElementById('prob-input').value.trim();
 
-    // 正規表現で形式を検証
     const regexN = /^n=(\d{1,3})$/;
-    const regexC = /^c=(\d{1,4})$/; // コイン数は0から9999までと仮定
+    const regexC = /^c=(\d{1,5})$/;
     const regexShow = /^show$/i;
     const regexCShow = /^c=show$/i;
 
     let match;
 
     if ((match = probInput.match(regexN)) !== null) {
-      // n=数字 の場合
       let newProbability = parseInt(match[1]);
 
       if (isNaN(newProbability) || newProbability < 0 || newProbability > 100) {
@@ -451,17 +445,17 @@
       baseProbability = newProbability;
       probRef.set({ n: baseProbability })
         .then(() => {
-          alert(`成功しました。n=${baseProbability} に設定されました。`);
+          alert(`n=${baseProbability} に設定されました。`);
           document.getElementById('menu').style.display = 'none';
         })
         .catch((error) => {
           alert('失敗しました。' + error);
         });
     } else if ((match = probInput.match(regexC)) !== null) {
-      // c=数字 の場合
+
       let newCoinCount = parseInt(match[1]);
 
-      if (isNaN(newCoinCount) || newCoinCount < 0 || newCoinCount > 10000) { // 適宜上限を設定
+      if (isNaN(newCoinCount) || newCoinCount < 0 || newCoinCount > 100000) {
         alert('コイン数は0から10000の間で設定してください。');
         return;
       }
@@ -470,17 +464,15 @@
       updateCoinDisplay();
       coinRef.set(coinCount)
         .then(() => {
-          alert(`成功しました。コイン数が${coinCount}枚に設定されました。`);
+          alert(`コイン数が${coinCount}枚に設定されました。`);
           document.getElementById('menu').style.display = 'none';
         })
         .catch((error) => {
           alert('失敗しました。' + error);
         });
     } else if (regexShow.test(probInput)) {
-      // show コマンドの場合
       document.getElementById('prob-input').value = `n=${baseProbability}`;
     } else if (regexCShow.test(probInput)) {
-      // c=show コマンドの場合
       alert(`現在のコイン数は ${coinCount}枚です。`);
     } else {
       alert('コードが違います。');
@@ -488,7 +480,6 @@
     }
   });
 
-  // チャットメッセージを送信する関数
   function sendMessage(message, sender) {
     if (message.trim() === '') {
       alert('メッセージを入力してください');
@@ -498,7 +489,7 @@
     const newMessage = {
       text: message,
       timestamp: firebase.database.ServerValue.TIMESTAMP,
-      sender: sender || "匿名"
+      sender: sender || "名無し"
     };
 
     messagesRef.push(newMessage);
@@ -514,35 +505,46 @@
     text = text.replace(/\[2\](.*?)(?=\[|$)/g, '<span style="font-size: 1.3em;">$1</span>');
     text = text.replace(/\[3\](.*?)(?=\[|$)/g, '<span style="font-size: 0.7em;">$1</span>');
     
-    // 色
     text = text.replace(/\[([a-zA-Z]+|#[0-9a-fA-F]{6})\](.*?)(?=\]|$)/g, '<span style="color:$1">$2</span>');
 
     return text;
   }
 
-  // チャットメッセージを受信する関数
   messagesRef.on('child_added', (snapshot) => {
-    const message = snapshot.val();
-    const time = new Date(message.timestamp).toLocaleTimeString();
+  const message = snapshot.val();
+  const time = new Date(message.timestamp).toLocaleTimeString();
 
-    const messageElement = document.createElement('div');
-    messageElement.classList.add('message');
+  const messageElement = document.createElement('div');
+  messageElement.classList.add('message');
 
-    // 書式を適用
-    const formattedText = formatMessage(message.text);
-    messageElement.innerHTML = `
-      <div class="meta-info">
-        <span class="sender-name">${message.sender}</span>
-        <span class="timestamp">${time}</span>
-      </div>
-      <div class="text">${formattedText}</div>
-    `;
+  const formattedText = formatMessage(message.text);
 
-    document.getElementById('chat-messages').appendChild(messageElement);
-    document.getElementById('chat-messages').scrollTop = document.getElementById('chat-messages').scrollHeight;
-  });
 
-  // 送信ボタンのクリックイベント
+  const youtubeRegex = /https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]+)/;
+  const youtubeMatch = message.text.match(youtubeRegex);
+  const link = formattedText.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>');
+
+  let content;
+  if (youtubeMatch) {
+    const videoId = youtubeMatch[1];
+    const embedHTML = `${link}<br><iframe width="320" height="180" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>上記のリンクをタップしてYouTubeに移動します</iframe>`;
+    content = embedHTML;
+  } else {
+    content = link;
+  }
+
+  messageElement.innerHTML = `
+    <div class="meta-info">
+      <span class="sender-name">${message.sender}</span>
+      <span class="timestamp">${time}</span>
+    </div>
+    <div class="text">${content}</div>
+  `;
+
+  document.getElementById('chat-messages').appendChild(messageElement);
+  document.getElementById('chat-messages').scrollTop = document.getElementById('chat-messages').scrollHeight;
+});
+
   document.getElementById('send-button').addEventListener('click', () => {
     const messageInput = document.getElementById('message-input');
     const message = messageInput.value;
@@ -550,7 +552,6 @@
     messageInput.value = '';
   });
 
-  // Enterキーでメッセージを送信するイベント
   document.getElementById('message-input').addEventListener('keydown', (event) => {
     if (event.key === 'Enter') {
       const messageInput = document.getElementById('message-input');
@@ -560,28 +561,26 @@
     }
   });
 
-  // ベット金額に応じたコインサイズを取得する関数
   function getCoinSize(betAmount) {
     if (betAmount >= 1 && betAmount <= 2) {
-      return '50px'; // 100%
+      return '50px';
     } else if (betAmount >= 3 && betAmount <= 5) {
-      return '35px'; // 70%
+      return '35px';
     } else if (betAmount >= 6 && betAmount <= 10) {
-      return '25px'; // 50%
+      return '25px';
     } else if (betAmount >= 11 && betAmount <= 20) {
-      return '20px'; // 30%
+      return '20px';
     } else if (betAmount >= 21 && betAmount <= 30) {
-      return '15px'; // 20%
+      return '15px';
     } else if (betAmount >= 31 && betAmount <= 40) {
-      return '10px'; // 10%
+      return '10px';
     } else if (betAmount >= 41 && betAmount <= 50) {
-      return '7px'; // 7%
+      return '7px';
     } else {
-      return '50px'; // デフォルト
+      return '7px';
     }
   }
 
-  // 1円ゲームのロジック
   document.getElementById('bet-button').addEventListener('click', () => {
     const betButton = document.getElementById('bet-button');
     const selectedSide = document.querySelector('input[name="bet-side"]:checked').value;
@@ -594,25 +593,21 @@
       return;
     }
 
-    // BETボタンを無効化
     betButton.disabled = true;
 
-    // クリア前の結果
+
     coinsContainer.innerHTML = '';
     resultContainer.textContent = '';
 
     const totalCoins = betAmount * 2;
 
-    // ベット金額に応じたコインサイズを取得
+
     const coinSize = getCoinSize(betAmount);
 
-    // コインを生成
     for (let i = 0; i < totalCoins; i++) {
       const coin = document.createElement('div');
       coin.classList.add('coin');
-      // 初期表示は表
       coin.style.backgroundImage = 'url("omote.png")';
-      // サイズを設定
       coin.style.width = coinSize;
       coin.style.height = coinSize;
       coinsContainer.appendChild(coin);
@@ -620,20 +615,16 @@
 
     const coins = document.querySelectorAll('.coin');
 
-    // ベット金額を一時的に減らす
     coinCount -= betAmount;
     updateCoinDisplay();
 
-    // Firebaseにコインカウントを一時的に保存
     coinRef.set(coinCount);
 
-    // アニメーション後に結果を決定
     setTimeout(() => {
       let headsCount = 0;
       let tailsCount = 0;
 
       coins.forEach(coin => {
-        // ユーザー設定の確率に基づいて表か裏を決定
         let isSelectedSide;
         if (selectedSide === '表') {
           isSelectedSide = Math.random() < (baseProbability / 100);
@@ -642,7 +633,6 @@
         }
 
         if (isSelectedSide) {
-          // 選択した側が出た場合
           if (selectedSide === '表') {
             coin.style.backgroundImage = 'url("omote.png")';
             headsCount++;
@@ -651,7 +641,6 @@
             tailsCount++;
           }
         } else {
-          // 反対側が出た場合
           if (selectedSide === '表') {
             coin.style.backgroundImage = 'url("ura.png")';
             tailsCount++;
@@ -660,49 +649,42 @@
             headsCount++;
           }
         }
-        // アニメーションを停止
+
         coin.style.animation = 'none';
       });
 
-      // 結果を計算
+
       let userWin = selectedSide === '表' ? headsCount : tailsCount;
       let netChange = userWin - betAmount;
 
-      // コインの更新
       coinCount += userWin;
       updateCoinDisplay();
 
-      // Firebaseにコインカウントを保存
       coinRef.set(coinCount);
 
-      // 結果を表示
       const netChangeText = netChange >= 0 ? `(+${netChange})` : `(${netChange})`;
       resultContainer.textContent = `結果: 表 ${headsCount} 裏 ${tailsCount} | 獲得枚数: ${userWin}枚 ${netChangeText}`;
 
-      // チャットに結果を送信
       sendMessage(`${selectedSide}に${betAmount}枚BETして${userWin}枚獲得。1円: ${coinCount}${netChangeText}枚`, "ゲームシステム");
 
-      // 3秒後にBETボタンを再有効化
+
       setTimeout(() => {
         betButton.disabled = false;
       }, 3000);
-    }, 2500); // アニメーション時間を2.5秒に設定
+    }, 2500);
   });
 
   document.getElementById('claim-bonus').addEventListener('click', () => {
-  const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD形式
+  const today = new Date().toISOString().split('T')[0];
 
-  // loginBonusDateを参照
   bonusRef.once('value').then((snapshot) => {
     const lastClaimDate = snapshot.val();
 
-    // すでに受け取っている場合
     if (lastClaimDate === today) {
       alert('おみくじは1日1回までです。\n明日まで待ってね');
       return; 
     }
 
-    // おみくじの結果を決定
     const omikujiResults = [
       { label: "大吉", coins: 10 },
       { label: "吉", coins: 7 },
@@ -715,7 +697,6 @@
     const randomIndex = Math.floor(Math.random() * omikujiResults.length);
     const result = omikujiResults[randomIndex];
 
-    // コインの付与
     coinCount += result.coins;
     coinRef.set(coinCount);
     updateCoinDisplay();
@@ -725,7 +706,6 @@
       sendMessage(`おみくじで${result.label}を引き、${result.coins}枚のコインを受け取りました。`, "ゲームシステム");
     }
 
-    // 受け取った日をloginBonusDateに保存
     bonusRef.set(today);
   }).catch((error) => {
     alert('取得に失敗しました。インターネット接続を確認してください。');
@@ -737,13 +717,11 @@
       const messageInput = document.getElementById('message-input');
       const message = messageInput.value;
 
-      // チェックボックスの状態を取得
       const boldChecked = document.querySelector('input[value="b"]').checked;
       const italicChecked = document.querySelector('input[value="i"]').checked;
       const strikethroughChecked = document.querySelector('input[value="s"]').checked;
       const underlineChecked = document.querySelector('input[value="u"]').checked;
 
-      // フォントサイズの選択を取得
       const fontSize = document.querySelector('input[name="fontsize"]:checked').value;
 
       let Text1 = message;
@@ -775,10 +753,65 @@
 
       document.getElementById('textmenu').style.display = 'none'
   }
-      
-  function updateProbabilityDisplay() {
-    return;
+    
+
+  
+  window.addEventListener('load', () => {
+  const storedChatName = localStorage.getItem('chatName');
+  if (storedChatName) {
+    chatName = storedChatName; // ユーザー名を設定
+  } else {
+    chatName = "名無し";
   }
+  
+  firebase.database().ref('users/' + chatName).set(true); // ユーザーをセット
+  loadActiveUsers(); // 参加ユーザーを読み込む
+});
+
+function loadActiveUsers() {
+  usersRef.once('value').then((snapshot) => {
+    const userList = document.getElementById('user-list');
+    userList.innerHTML = '';
+
+    snapshot.forEach((childSnapshot) => {
+      const userName = childSnapshot.key;
+      const listItem = document.createElement('li');
+      listItem.textContent = userName;
+      userList.appendChild(listItem);
+      // 参加メッセージを表示
+      showJoinMessage(userName);
+    });
+  });
+}
+
+function updateUserList() {
+  usersRef.once('value').then((snapshot) => {
+    const userList = document.getElementById('user-list');
+    userList.innerHTML = '';
+
+    snapshot.forEach((childSnapshot) => {
+      const userName = childSnapshot.key;
+      const listItem = document.createElement('li');
+      listItem.textContent = userName;
+      userList.appendChild(listItem);
+    });
+  });
+}
+
+window.addEventListener('beforeunload', () => {
+  usersRef.child(chatName).remove();
+});
+
+usersRef.on('child_added', (snapshot) => {
+  const userName = snapshot.key;
+  updateUserList();
+  showJoinMessage(userName);
+});
+
+usersRef.on('child_removed', (snapshot) => {
+  updateUserList();
+});
+
   </script>
 </body>
 </html>
