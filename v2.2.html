@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>1円ギャンブル オンライン</title>
+  <link rel="stylesheet" href="chat.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .menu-button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: transparent;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      z-index: 100;
+    }
+
+    .textmenu-button {
+      background-color: transparent;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      z-index: 100;
+    }
+
+    .menu {
+      display: none;
+      position: absolute;
+      top: 50px;
+      right: 10px;
+      background-color: rgba(255, 255, 255, 0.9);
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      z-index: 100;
+    }
+
+    .textmenu {
+      display: none;
+      position: absolute;
+      bottom: 50px;
+      left: 10px;
+      background-color: rgba(255, 255, 255, 0.9);
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      z-index: 1000;
+    } 
+  
+  
+    .coin-count {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background-color: #ffeb3b;
+      padding: 10px 20px;
+      border-radius: 5px;
+      font-weight: bold;
+      z-index: 100;
+    }
+
+    .chat-container {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      height: 50%;
+      background-color: #f1f1f1;
+      border-top: 2px solid #ddd;
+      padding: 10px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chat-messages {
+      overflow-y: auto;
+      flex-grow: 1;
+      margin-bottom: 10px;
+    }
+
+    .message-input-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    #message-input {
+      width: calc(100% - 120px);
+      padding: 8px;
+    }
+
+    #send-button {
+      padding: 8px 16px;
+      height: 35px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    .message {
+      padding: 5px;
+      margin-bottom: 10px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .meta-info {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85em;
+      color: #555;
+    }
+
+    .text {
+      margin-top: 5px;
+    }
+
+    .game-container {
+      padding: 20px;
+      background-color: #fafafa;
+      border-bottom: 2px solid #ddd;
+    }
+
+    .game-container h2 {
+      margin-top: 0;
+    }
+
+    .game-controls {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .game-controls label {
+      margin-right: 10px;
+    }
+
+    .game-controls input[type="radio"] {
+      margin-right: 5px;
+    }
+
+    .game-controls select {
+      margin: 0 10px;
+      padding: 5px;
+    }
+
+    #bet-button {
+      padding: 8px 16px;
+      background-color: #2196F3;
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    #bet-button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+
+    .coins-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .coin {
+      background-size: cover;
+      animation: flip 0.15s infinite;
+    }
+
+    @keyframes flip {
+      0% { transform: rotateY(0deg); }
+      50% { transform: rotateY(360deg); }
+      100% { transform: rotateY(0deg); }
+    }
+
+    .result {
+      text-align: center;
+      font-size: 1.2em;
+      font-weight: bold;
+    }
+
+  </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+
+  <div class="coin-count" id="coin-count">読み込み中</div>
+
+  <button class="menu-button" id="menu-button"><i class="fa-solid fa-bars"></i></button>
+
+  <div class="menu" id="menu">
+    <input type="text" id="chat-name" placeholder="チャットのニックネーム">
+    <button id="set-chat-name">✔</button>
+    <br><br>
+    <button id="claim-bonus">おみくじを引く</button>
+    <br><br>
+    <label for="prob-input">code</label><br>
+    <input type="text" id="prob-input" placeholder="コードを入力してください">
+    <button id="set-probabilities">✔</button>
+    <div id="active-users">
+      <p>参加中ユーザー</p>
+      <ul id="user-list"></ul>
+    </div>    
+    
+  </div>
+  
+
+  <div class="textmenu" id="textmenu">
+    <input type="color" id="colorinput">
+    <label>
+      <input type="checkbox" value="b">
+      <b>B</b>
+      <input type="checkbox" value="i">
+      <i>I</i>
+      <input type="checkbox" value="s">
+      <s>S</s>
+      <input type="checkbox" value="u">
+      <u>U</u>
+    <br>
+    <input type="radio" name="fontsize" value="0" checked>
+    標準
+    <input type="radio" name="fontsize" value="1">
+    <span style="font-size: 1.7em;">大</span>
+    <input type="radio" name="fontsize" value="2">
+    <span style="font-size: 1.3em;">中</span>
+    <input type="radio" name="fontsize" value="3">
+    <span style="font-size: 0.7em">小</span>
+    </label>
+    <button onclick="applyText()">適用</button>
+  </div>
+
+  <div class="game-container" id="game-container">
+    <p>　　　　　　　　　　　1円ギャンブル v2.1</p>
+    <div class="game-controls">
+      <label>
+        <input type="radio" name="bet-side" value="表" checked>
+        表
+      </label>
+      <label>
+        <input type="radio" name="bet-side" value="裏">
+        裏
+      </label>に
+      <select id="bet-amount">
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+        <option value="6">6</option>
+        <option value="7">7</option>
+        <option value="8">8</option>
+        <option value="9">9</option>
+        <option value="10">10</option>
+        <option value="11">11</option>
+        <option value="12">12</option>
+        <option value="13">13</option>
+        <option value="14">14</option>
+        <option value="15">15</option>
+        <option value="16">16</option>
+        <option value="17">17</option>
+        <option value="18">18</option>
+        <option value="19">19</option>
+        <option value="20">20</option>
+        <option value="21">21</option>
+        <option value="22">22</option>
+        <option value="23">23</option>
+        <option value="24">24</option>
+        <option value="25">25</option>
+        <option value="26">26</option>
+        <option value="27">27</option>
+        <option value="28">28</option>
+        <option value="29">29</option>
+        <option value="30">30</option>
+        <option value="31">31</option>
+        <option value="32">32</option>
+        <option value="33">33</option>
+        <option value="34">34</option>
+        <option value="35">35</option>
+        <option value="36">36</option>
+        <option value="37">37</option>
+        <option value="38">38</option>
+        <option value="39">39</option>
+        <option value="40">40</option>
+        <option value="41">41</option>
+        <option value="42">42</option>
+        <option value="43">43</option>
+        <option value="44">44</option>
+        <option value="45">45</option>
+        <option value="46">46</option>
+        <option value="47">47</option>
+        <option value="48">48</option>
+        <option value="49">49</option>
+        <option value="50">50</option>
+      </select>
+      枚　　
+      <button id="bet-button">ベット</button>
+    </div>
+    <div class="coins-container" id="coins-container"></div>
+    <div class="result" id="result"></div>
+  </div>
+
+  <div id="chat-container" class="chat-container">
+    <div id="chat-messages" class="chat-messages"></div>
+
+    <div class="message-input-container">
+      <button class="textmenu-button" id="textmenu-button"><span style="color: #FFD43B;">A</span><span style="font-size: 0.6em; color: #B197FC">A</span></button>
+      <input type="text" id="message-input" placeholder="メッセージを入力">
+      <button id="send-button"><i class="fa-solid fa-paper-plane"></i></button>
+    </div>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  
+  <script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyCZYjVLic4JthtsHxubAGVgv0FdQ3mDTSM",
+    authDomain: "one-yen-gambling.firebaseapp.com",
+    projectId: "one-yen-gambling",
+    storageBucket: "one-yen-gambling.appspot.com",
+    messagingSenderId: "649927241844",
+    appId: "1:649927241844:web:20d3688537b9f0da5ba121",
+    measurementId: "G-MFG9548W5S"
+  };
+  firebase.initializeApp(firebaseConfig);
+
+  const specialbonusRef = firebase.database().ref('bonus');
+  const messagesRef = firebase.database().ref('messages');
+  const coinRef = firebase.database().ref('coinCount');
+  const bonusRef = firebase.database().ref('loginBonusDate');
+  const probRef = firebase.database().ref('probabilities');
+  const usersRef = firebase.database().ref('users');
+
+  let chatName = "名無し";
+  let coinCount = 0;
+  let baseProbability = 50;
+
+  if (localStorage.getItem('chatName')) {
+    chatName = localStorage.getItem('chatName');
+  }
+
+  function updateCoinDisplay() {
+    document.getElementById('coin-count').innerHTML = `
+    <img src="omote.png" width="25px" alt="1円" style="vertical-align: middle; display:inline-block;">×${coinCount}枚`;
+  }
+
+  coinRef.once('value').then((snapshot) => {
+    if (snapshot.exists()) {
+      coinCount = snapshot.val();
+    } else {
+      coinRef.set(coinCount);
+    }
+    updateCoinDisplay();
+  });
+
+  probRef.once('value').then((snapshot) => {
+    if (snapshot.exists()) {
+      const probs = snapshot.val();
+      baseProbability = probs.n !== undefined ? probs.n : 50;
+    } else {
+      probRef.set({ n: baseProbability });
+    }
+  });
+
+coinRef.on('value', (snapshot) => {
+  if (snapshot.exists()) {
+    coinCount = snapshot.val();
+    updateCoinDisplay();
+  }
+});
+
+probRef.on('value', (snapshot) => {
+  if (snapshot.exists()) {
+    const probs = snapshot.val();
+    baseProbability = probs.n !== undefined ? probs.n : 50;
+  }
+});
+
+
+  document.getElementById('menu-button').addEventListener('click', () => {
+    const menu = document.getElementById('menu');
+    menu.style.display = menu.style.display === 'none' || menu.style.display === '' ? 'block' : 'none';
+  });
+
+  document.getElementById('textmenu-button').addEventListener('click', () => {
+    const textmenu = document.getElementById('textmenu');
+    textmenu.style.display = textmenu.style.display === 'none' || textmenu.style.display === '' ? 'block' : 'none';
+  });
+
+
+  document.getElementById('set-chat-name').addEventListener('click', () => {
+  usersRef.child(chatName).remove();
+  const nameInput = document.getElementById('chat-name');
+  chatName = nameInput.value.trim() || "名無し";
+  localStorage.setItem('chatName', chatName);
+
+  firebase.database().ref('users/' + chatName).set(true);
+
+  alert(`チャット名が "${chatName}" に設定されました`);
+  document.getElementById('menu').style.display = 'none';
+
+  updateUserList();
+});
+
+
+
+
+document.getElementById('set-probabilities').addEventListener('click', () => {
+    const probInput = document.getElementById('prob-input').value.trim();
+
+    const regexN = /^n=(\d{1,3})$/;
+    const regexC = /^c=(\d{1,5})$/;
+    const regexB = /^b=(.+)$/;
+    const regexShow = /^show$/i;
+    const regexCShow = /^c=show$/i;    
+
+    let match;
+
+    if ((match = probInput.match(regexN)) !== null) {
+      let newProbability = parseInt(match[1]);
+
+      if (isNaN(newProbability) || newProbability < 0 || newProbability > 100) {
+        alert('不正な値です。');
+        return;
+      }
+
+      baseProbability = newProbability;
+      probRef.set({ n: baseProbability })
+        .then(() => {
+          alert(`n=${baseProbability} に設定されました。`);
+          document.getElementById('menu').style.display = 'none';
+        })
+        .catch((error) => {
+          alert('失敗しました。' + error);
+        });
+    } else if ((match = probInput.match(regexC)) !== null) {
+      let newCoinCount = parseInt(match[1]);
+
+      if (isNaN(newCoinCount) || newCoinCount < 0 || newCoinCount > 100000) {
+        alert('不正な値です。');
+        return;
+      }
+
+      coinCount = newCoinCount;
+      updateCoinDisplay();
+      coinRef.set(coinCount)
+        .then(() => {
+          alert(`コイン数が${coinCount}枚に設定されました。`);
+          document.getElementById('menu').style.display = 'none';
+        })
+        .catch((error) => {
+          alert('失敗しました。' + error);
+        });
+    } else if ((match = probInput.match(regexB)) !== null) {
+      const newValue = match[1];
+
+      specialbonusRef.set(newValue)
+        .then(() => {
+          alert(`bonusに "${newValue}" が設定されました。`);
+          document.getElementById('menu').style.display = 'none';
+        })
+        .catch((error) => {
+          alert('失敗しました。' + error);
+        });
+    } else if (regexShow.test(probInput)) {
+      document.getElementById('prob-input').value = `n=${baseProbability}`;
+    } else if (regexCShow.test(probInput)) {
+      alert(`現在のコイン数は ${coinCount}枚です。`);
+    } else {
+      alert('コードが違います。');
+      return;
+    }
+});
+
+  function sendMessage(message, sender) {
+    if (message.trim() === '') {
+      alert('メッセージを入力してください');
+      return;
+    }
+
+    const newMessage = {
+      text: message,
+      timestamp: firebase.database.ServerValue.TIMESTAMP,
+      sender: sender || "名無し"
+    };
+
+    messagesRef.push(newMessage);
+  }
+
+  function formatMessage(text) {
+    text = text.replace(/\[b\](.*?)(?=\[|$)/g, '<b>$1</b>');
+    text = text.replace(/\[i\](.*?)(?=\[|$)/g, '<em>$1</em>');
+    text = text.replace(/\[s\](.*?)(?=\[|$)/g, '<s>$1</s>');
+    text = text.replace(/\[u\](.*?)(?=\[|$)/g, '<u>$1</u>');
+    text = text.replace(/\[0\](.*?)(?=\[|$)/g, '<span style="font-size: 1em;">$1</span>');
+    text = text.replace(/\[1\](.*?)(?=\[|$)/g, '<span style="font-size: 1.7em;">$1</span>');
+    text = text.replace(/\[2\](.*?)(?=\[|$)/g, '<span style="font-size: 1.3em;">$1</span>');
+    text = text.replace(/\[3\](.*?)(?=\[|$)/g, '<span style="font-size: 0.7em;">$1</span>');
+    
+    text = text.replace(/\[([a-zA-Z]+|#[0-9a-fA-F]{6})\](.*?)(?=\]|$)/g, '<span style="color:$1">$2</span>');
+
+    return text;
+  }
+
+  messagesRef.on('child_added', (snapshot) => {
+  const message = snapshot.val();
+  const time = new Date(message.timestamp).toLocaleTimeString();
+
+  const messageElement = document.createElement('div');
+  messageElement.classList.add('message');
+
+  const formattedText = formatMessage(message.text);
+
+
+  const youtubeRegex = /https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]+)/;
+  const youtubeMatch = message.text.match(youtubeRegex);
+  const link = formattedText.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>');
+
+  let content;
+  if (youtubeMatch) {
+    const videoId = youtubeMatch[1];
+    const embedHTML = `${link}<br><iframe width="320" height="180" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>上記のリンクをタップしてYouTubeに移動します</iframe>`;
+    content = embedHTML;
+  } else {
+    content = link;
+  }
+
+  messageElement.innerHTML = `
+    <div class="meta-info">
+      <span class="sender-name">${message.sender}</span>
+      <span class="timestamp">${time}</span>
+    </div>
+    <div class="text">${content}</div>
+  `;
+
+  document.getElementById('chat-messages').appendChild(messageElement);
+  document.getElementById('chat-messages').scrollTop = document.getElementById('chat-messages').scrollHeight;
+});
+
+  document.getElementById('send-button').addEventListener('click', () => {
+    const messageInput = document.getElementById('message-input');
+    const message = messageInput.value;
+    sendMessage(message, chatName);
+    messageInput.value = '';
+  });
+
+  document.getElementById('message-input').addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+      const messageInput = document.getElementById('message-input');
+      const message = messageInput.value;
+      sendMessage(message, chatName);
+      messageInput.value = '';
+    }
+  });
+
+  function getCoinSize(betAmount) {
+    if (betAmount >= 1 && betAmount <= 2) {
+      return '50px';
+    } else if (betAmount >= 3 && betAmount <= 5) {
+      return '35px';
+    } else if (betAmount >= 6 && betAmount <= 10) {
+      return '25px';
+    } else if (betAmount >= 11 && betAmount <= 20) {
+      return '20px';
+    } else if (betAmount >= 21 && betAmount <= 30) {
+      return '15px';
+    } else if (betAmount >= 31 && betAmount <= 40) {
+      return '10px';
+    } else if (betAmount >= 41 && betAmount <= 50) {
+      return '7px';
+    } else {
+      return '7px';
+    }
+  }
+
+  document.getElementById('bet-button').addEventListener('click', () => {
+    const betButton = document.getElementById('bet-button');
+    const selectedSide = document.querySelector('input[name="bet-side"]:checked').value;
+    const betAmount = parseInt(document.getElementById('bet-amount').value);
+    const coinsContainer = document.getElementById('coins-container');
+    const resultContainer = document.getElementById('result');
+
+    if (coinCount < betAmount) {
+      alert('コインが不足しています');
+      return;
+    }
+
+    betButton.disabled = true;
+
+
+    coinsContainer.innerHTML = '';
+    resultContainer.textContent = '';
+
+    const totalCoins = betAmount * 2;
+
+
+    const coinSize = getCoinSize(betAmount);
+
+    for (let i = 0; i < totalCoins; i++) {
+      const coin = document.createElement('div');
+      coin.classList.add('coin');
+      coin.style.backgroundImage = 'url("omote.png")';
+      coin.style.width = coinSize;
+      coin.style.height = coinSize;
+      coinsContainer.appendChild(coin);
+    }
+
+    const coins = document.querySelectorAll('.coin');
+
+    coinCount -= betAmount;
+    updateCoinDisplay();
+
+    coinRef.set(coinCount);
+
+    setTimeout(() => {
+      let headsCount = 0;
+      let tailsCount = 0;
+
+      coins.forEach(coin => {
+        let isSelectedSide;
+        if (selectedSide === '表') {
+          isSelectedSide = Math.random() < (baseProbability / 100);
+        } else {
+          isSelectedSide = Math.random() < (baseProbability / 100);
+        }
+
+        if (isSelectedSide) {
+          if (selectedSide === '表') {
+            coin.style.backgroundImage = 'url("omote.png")';
+            headsCount++;
+          } else {
+            coin.style.backgroundImage = 'url("ura.png")';
+            tailsCount++;
+          }
+        } else {
+          if (selectedSide === '表') {
+            coin.style.backgroundImage = 'url("ura.png")';
+            tailsCount++;
+          } else {
+            coin.style.backgroundImage = 'url("omote.png")';
+            headsCount++;
+          }
+        }
+
+        coin.style.animation = 'none';
+      });
+
+
+      let userWin = selectedSide === '表' ? headsCount : tailsCount;
+      let netChange = userWin - betAmount;
+
+      coinCount += userWin;
+      updateCoinDisplay();
+
+      coinRef.set(coinCount);
+
+      const netChangeText = netChange >= 0 ? `(+${netChange})` : `(${netChange})`;
+      resultContainer.textContent = `結果: 表 ${headsCount} 裏 ${tailsCount} | 獲得枚数: ${userWin}枚 ${netChangeText}`;
+
+      sendMessage(`${selectedSide}に${betAmount}枚BETして${userWin}枚獲得。1円: ${coinCount}${netChangeText}枚`, "ゲームシステム");
+
+
+      setTimeout(() => {
+        betButton.disabled = false;
+      }, 3000);
+    }, 2500);
+  });
+
+  document.getElementById('claim-bonus').addEventListener('click', () => {
+  const today = new Date().toISOString().split('T')[0];
+
+  bonusRef.once('value').then((snapshot) => {
+    const lastClaimDate = snapshot.val();
+
+    if (lastClaimDate === today) {
+      alert('おみくじは1日1回までです。\n明日まで待ってね');
+      return; 
+    }
+
+    const omikujiResults = [
+      { label: "大吉", coins: 10 },
+      { label: "吉", coins: 7 },
+      { label: "中吉", coins: 5 },
+      { label: "小吉", coins: 3 },
+      { label: "末吉", coins: 2},
+      { label: "凶", coins: 1 }
+    ];
+
+    const randomIndex = Math.floor(Math.random() * omikujiResults.length);
+    const result = omikujiResults[randomIndex];
+
+    coinCount += result.coins;
+    coinRef.set(coinCount);
+    updateCoinDisplay();
+
+    if (result.coins > 0) {
+      alert(`おみくじの結果は${result.label}でした。 ${result.coins}枚のコインを受け取りました。`);
+      sendMessage(`おみくじで${result.label}を引き、${result.coins}枚のコインを受け取りました。`, "ゲームシステム");
+    }
+
+    bonusRef.set(today);
+  }).catch((error) => {
+    alert('取得に失敗しました。インターネット接続を確認してください。');
+  });
+});
+
+
+  function applyText() {
+      const messageInput = document.getElementById('message-input');
+      const message = messageInput.value;
+
+      const boldChecked = document.querySelector('input[value="b"]').checked;
+      const italicChecked = document.querySelector('input[value="i"]').checked;
+      const strikethroughChecked = document.querySelector('input[value="s"]').checked;
+      const underlineChecked = document.querySelector('input[value="u"]').checked;
+
+      const fontSize = document.querySelector('input[name="fontsize"]:checked').value;
+
+      let Text1 = message;
+      if (boldChecked) {
+          Text1 = `[b]${Text1}`;
+      }
+      let Text2 = Text1;
+      if (italicChecked) {
+          Text2 = `[i]${Text2}`;
+      }
+      let Text3 = Text2;
+      if (strikethroughChecked) {
+          Text3 = `[s]${Text3}`;
+      }
+      let Text4 = Text3;
+      if (underlineChecked) {
+          Text4 = `[u]${Text4}`;
+      }
+
+      let Text5 = Text4;
+      if (fontSize !== '0') {
+          Text5 = `[${fontSize}]${Text5}`;
+      }
+
+      const chatColor = document.getElementById('colorinput').value;
+      formattedMessage = `[${chatColor}]${Text5}`;
+
+      messageInput.value = formattedMessage;
+
+      document.getElementById('textmenu').style.display = 'none'
+  }
+    
+
+  
+  window.addEventListener('load', () => {
+  const storedChatName = localStorage.getItem('chatName');
+  if (storedChatName) {
+    chatName = storedChatName; // ユーザー名を設定
+  } else {
+    chatName = "名無し";
+  }
+  
+  firebase.database().ref('users/' + chatName).set(true); // ユーザーをセット
+  loadActiveUsers();
+});
+
+function loadActiveUsers() {
+  usersRef.once('value').then((snapshot) => {
+    const userList = document.getElementById('user-list');
+    userList.innerHTML = '';
+
+    snapshot.forEach((childSnapshot) => {
+      const userName = childSnapshot.key;
+      const listItem = document.createElement('li');
+      listItem.textContent = userName;
+      userList.appendChild(listItem);
+    });
+  });
+}
+
+function updateUserList() {
+  usersRef.once('value').then((snapshot) => {
+    const userList = document.getElementById('user-list');
+    userList.innerHTML = '';
+
+    snapshot.forEach((childSnapshot) => {
+      const userName = childSnapshot.key;
+      const listItem = document.createElement('li');
+      listItem.textContent = userName;
+      userList.appendChild(listItem);
+    });
+  });
+}
+
+window.addEventListener('beforeunload', () => {
+  usersRef.child(chatName).remove();
+});
+
+usersRef.on('child_added', (snapshot) => {
+  const userName = snapshot.key;
+  updateUserList();
+});
+
+usersRef.on('child_removed', (snapshot) => {
+  updateUserList();
+});
+
+
+
+specialbonusRef.once('value').then((snapshot) => {
+  if (snapshot.exists()) {
+    const bonusData = snapshot.val();
+    const [message, coinString] = bonusData.split(",");
+    const coins = parseInt(coinString, 10);
+    
+        coinRef.once('value').then((coinSnapshot) => {
+        let currentCoins = coinSnapshot.exists() ? coinSnapshot.val() : 0;
+        const newCoinCount = currentCoins + coins;
+
+        coinRef.set(newCoinCount).then(() => {
+          specialbonusRef.remove();
+          sendMessage(`${message}<br>${coins}枚の1円を受け取りました。`,'ゲームシステム');
+          alert(`${message}\n${coins}枚の1円を受け取りました。`);
+        });
+      });
+    }
+});
+
+  </script>
+</body>
+</html>
