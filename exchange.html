@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>両替システム</title>
     <style>
+        body {
+          font-family: Arial, sans-serif;
+        }
         #JpyBalance, #UsdBalance {
             position: absolute;
             top: 10px;
@@ -115,67 +118,68 @@
         }
 
         function exchange() {
-            if (exchangeCount >= 30) {
-                alert('今日の両替回数は上限に達しました。');
+    if (exchangeCount >= 30) {
+        alert('今日の両替回数は上限に達しました。');
+        return;
+    }
+
+    const exchangeDirection = document.getElementById('exchangeDirection').value;
+    const desiredAmount = parseFloat(document.getElementById('amount').value);
+    if (desiredAmount <= 0 || isNaN(desiredAmount)) {
+        alert('正しい金額を入力してください。');
+        return;
+    }
+
+    getExchangeRate().then(rate => {
+        if (exchangeDirection === "toYen") {
+            // 円への両替（セント→円）
+            const requiredCentAmount = desiredAmount / rate;
+            const roundedCentAmount = Math.ceil(requiredCentAmount);
+
+            if (roundedCentAmount > centBalance) {
+                alert(`${desiredAmount} 円は約 ${requiredCentAmount.toFixed(2)} セントです。\n所持しているセントの残高が不足しています。`);
                 return;
             }
 
-            const exchangeDirection = document.getElementById('exchangeDirection').value;
-            const desiredAmount = parseFloat(document.getElementById('amount').value);
-            if (desiredAmount <= 0 || isNaN(desiredAmount)) {
-                alert('正しい金額を入力してください。');
+            const confirmation = confirm(
+                `${desiredAmount} 円は約 ${requiredCentAmount.toFixed(2)} セントです。\n切り上げて ${roundedCentAmount} セントになりますが、よろしいですか？`
+            );
+
+            if (confirmation) {
+                centBalance -= roundedCentAmount;
+                yenBalance += desiredAmount;
+                exchangeCount += 1;
+                updateBalances();
+                alert(`${roundedCentAmount} セントを ${desiredAmount} 円に両替しました。`);
+            }
+
+        } else if (exchangeDirection === "toCent") {
+            // セントへの両替（円→セント）
+            const requiredYenAmount = desiredAmount * rate;
+            const roundedYenAmount = Math.ceil(requiredYenAmount);
+
+            if (roundedYenAmount > yenBalance) {
+                alert(`${desiredAmount} セントは約 ${requiredYenAmount.toFixed(2)} 円です。\n所持している円の残高が不足しています。`);
                 return;
             }
 
-            getExchangeRate().then(rate => {
-                if (exchangeDirection === "toYen") {
-                    const requiredCentAmount = desiredAmount * (rate);
-                    const roundedCentAmount = Math.ceil(requiredCentAmount);
+            const confirmation = confirm(
+                `${desiredAmount} セントは約 ${requiredYenAmount.toFixed(2)} 円です。\n切り上げて ${roundedYenAmount} 円になりますが、よろしいですか？`
+            );
 
-                    if (roundedCentAmount > centBalance) {
-                        alert(`${desiredAmount} 円は ${requiredCentAmount.toFixed(2)} セントです。\n所持しているセントの残高が不足しています。`);
-                        return;
-                    }
-
-                    const confirmation = confirm(
-                        `${desiredAmount} 円は ${requiredCentAmount.toFixed(2)} セントです。\n切り上げて、${roundedCentAmount} セントになりますが、よろしいですか？`
-                    );
-
-                    if (confirmation) {
-                        centBalance -= roundedCentAmount;
-                        yenBalance += desiredAmount;
-                        exchangeCount += 1;
-                        updateBalances();
-                        alert(`${roundedCentAmount} セントを ${desiredAmount} 円に両替しました。`);
-                    }
-
-                } else if (exchangeDirection === "toCent") {
-
-                    const requiredYenAmount = desiredAmount * (rate);
-                    const roundedYenAmount = Math.ceil(requiredYenAmount);
-
-                    if (roundedYenAmount > yenBalance) {
-                        alert('所持している円の残高が不足しています。');
-                        return;
-                    }
-
-                    const confirmation = confirm(
-                        `${desiredAmount} セントは ${requiredYenAmount.toFixed(2)} 円です。\n切り上げて、${roundedYenAmount} 円になりますが、よろしいですか？`
-                    );
-
-                    if (confirmation) {
-                        yenBalance -= roundedYenAmount;
-                        centBalance += desiredAmount;
-                        exchangeCount += 1;
-                        updateBalances();
-                        alert(`${roundedYenAmount} 円を ${desiredAmount} セントに両替しました。`);
-                    }
-                }
-            }).catch(error => {
-                console.error(error);
-                alert('エラーが発生しました');
-            });
+            if (confirmation) {
+                yenBalance -= roundedYenAmount;
+                centBalance += desiredAmount;
+                exchangeCount += 1;
+                updateBalances();
+                alert(`${roundedYenAmount} 円を ${desiredAmount} セントに両替しました。`);
+            }
         }
+    }).catch(error => {
+        console.error(error);
+        alert('エラーが発生しました');
+    });
+}
 
         fetchBalances();
     </script>
