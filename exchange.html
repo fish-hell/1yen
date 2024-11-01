@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>両替システム</title>
+    <style>
+        #JpyBalance, #UsdBalance {
+            position: absolute;
+            top: 10px;
+            background-color: #ffeb3b;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-weight: bold;
+            z-index: 100;
+        }
+        #JpyBalance {
+            left: 10px;
+        }
+        #UsdBalance {
+            left: 150px;
+        }
+        #leftExchangeCount {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <br><br>
+    <div id="JpyBalance">読み込み中</div>
+    <div id="UsdBalance">読み込み中</div>
+    <h1>両替システム</h1>
+
+    <select id="exchangeDirection">
+        <option value="toCent">円→セント</option>
+        <option value="toYen">セント→円</option>
+    </select>
+    <br><br>
+
+    <label for="amount">希望金額: </label>
+    <input type="number" id="amount" placeholder="金額を入力">
+    <button onclick="exchange()">両替</button>
+    <div id="leftExchangeCount">本日の残り両替可能回数: ?</div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCZYjVLic4JthtsHxubAGVgv0FdQ3mDTSM",
+            authDomain: "one-yen-gambling.firebaseapp.com",
+            projectId: "one-yen-gambling",
+            storageBucket: "one-yen-gambling.appspot.com",
+            messagingSenderId: "649927241844",
+            appId: "1:649927241844:web:20d3688537b9f0da5ba121",
+            measurementId: "G-MFG9548W5S"
+        };
+        firebase.initializeApp(firebaseConfig);
+
+        const centRef = firebase.database().ref('centCount');
+        const yenRef = firebase.database().ref('coinCount');
+        const exchangeCountRef = firebase.database().ref('exchangeCount');
+
+        const usdToJpyUrl = 'https://v6.exchangerate-api.com/v6/77ceb4bfd00b965fe0a35a69/latest/USD';
+        let yenBalance = 0;
+        let centBalance = 0;
+        let exchangeCount = 0;
+        let exchangeRate = 0;
+
+        function fetchBalances() {
+            yenRef.on('value', (snapshot) => {
+                yenBalance = snapshot.val() || 0;
+                document.getElementById('JpyBalance').innerHTML = `
+                <img src="omote.png" width="25px" alt="1円" style="vertical-align: middle; display:inline-block;">×${yenBalance}枚`;
+            });
+
+            centRef.on('value', (snapshot) => {
+                centBalance = snapshot.val() || 0;
+                document.getElementById('UsdBalance').innerHTML = `
+                <img src="1cent-omote.png" width="25px" alt="1セント" style="vertical-align: middle; display:inline-block;">×${centBalance}枚`;
+            });
+
+            exchangeCountRef.on('value', (snapshot) => {
+                exchangeCount = snapshot.val() || 0;
+                updateExchangeCountDisplay();
+            });
+        }
+
+        function updateExchangeCountDisplay() {
+            const leftExchangeCount = document.getElementById('leftExchangeCount');
+            leftExchangeCount.textContent = '本日の残り両替可能回数: ' + (30 - exchangeCount);
+        }
+
+        function updateBalances() {
+            yenRef.set(yenBalance);
+            centRef.set(centBalance);
+            exchangeCountRef.set(exchangeCount);
+            updateExchangeCountDisplay();
+        }
+
+        function getExchangeRate() {
+            return new Promise((resolve, reject) => {
+                fetch(usdToJpyUrl)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.result === "success") {
+                            exchangeRate = data.conversion_rates.JPY / 100;
+                            resolve(exchangeRate);
+                        } else {
+                            reject(`エラー: ${data['error-type']}`);
+                        }
+                    })
+                    .catch(error => reject('Fetch Error: ' + error));
+            });
+        }
+
+        function exchange() {
+            if (exchangeCount >= 30) {
+                alert('今日の両替回数は上限に達しました。');
+                return;
+            }
+
+            const exchangeDirection = document.getElementById('exchangeDirection').value;
+            const desiredAmount = parseFloat(document.getElementById('amount').value);
+            if (desiredAmount <= 0 || isNaN(desiredAmount)) {
+                alert('正しい金額を入力してください。');
+                return;
+            }
+
+            getExchangeRate().then(rate => {
+                if (exchangeDirection === "toYen") {
+                    const requiredCentAmount = desiredAmount * (rate);
+                    const roundedCentAmount = Math.ceil(requiredCentAmount);
+
+                    if (roundedCentAmount > centBalance) {
+                        alert(`${desiredAmount} 円は ${requiredCentAmount.toFixed(2)} セントです。\n所持しているセントの残高が不足しています。`);
+                        return;
+                    }
+
+                    const confirmation = confirm(
+                        `${desiredAmount} 円は ${requiredCentAmount.toFixed(2)} セントです。\n切り上げて、${roundedCentAmount} セントになりますが、よろしいですか？`
+                    );
+
+                    if (confirmation) {
+                        centBalance -= roundedCentAmount;
+                        yenBalance += desiredAmount;
+                        exchangeCount += 1;
+                        updateBalances();
+                        alert(`${roundedCentAmount} セントを ${desiredAmount} 円に両替しました。`);
+                    }
+
+                } else if (exchangeDirection === "toCent") {
+
+                    const requiredYenAmount = desiredAmount * (rate);
+                    const roundedYenAmount = Math.ceil(requiredYenAmount);
+
+                    if (roundedYenAmount > yenBalance) {
+                        alert('所持している円の残高が不足しています。');
+                        return;
+                    }
+
+                    const confirmation = confirm(
+                        `${desiredAmount} セントは ${requiredYenAmount.toFixed(2)} 円です。\n切り上げて、${roundedYenAmount} 円になりますが、よろしいですか？`
+                    );
+
+                    if (confirmation) {
+                        yenBalance -= roundedYenAmount;
+                        centBalance += desiredAmount;
+                        exchangeCount += 1;
+                        updateBalances();
+                        alert(`${roundedYenAmount} 円を ${desiredAmount} セントに両替しました。`);
+                    }
+                }
+            }).catch(error => {
+                console.error(error);
+                alert('エラーが発生しました');
+            });
+        }
+
+        fetchBalances();
+    </script>
+</body>
+</html>
