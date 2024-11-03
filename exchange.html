@@ -17,18 +17,10 @@
             font-weight: bold;
             z-index: 100;
         }
-        #JpyBalance {
-            left: 10px;
-        }
-        #UsdBalance {
-            left: 150px;
-        }
-        #YuanBalance {
-            left: 290px;
-        }
-        #leftExchangeCount {
-            margin-top: 20px;
-        }
+        #JpyBalance { left: 10px; }
+        #UsdBalance { left: 130px; }
+        #YuanBalance { left: 270px; }
+        #leftExchangeCount { margin-top: 20px; }
     </style>
 </head>
 <body>
@@ -36,13 +28,13 @@
     <div id="JpyBalance">読み込み中</div>
     <div id="UsdBalance">読み込み中</div>
     <div id="YuanBalance">読み込み中</div>
-    <h1>両替システム v1.1</h1>
+    <h1>両替システム</h1>
 
     <select id="exchangeDirection">
         <option value="toCent">円→セント</option>
         <option value="toYen">セント→円</option>
         <option value="toYuan">円→元</option>
-        <option value="toJpy">元→円</option>
+        <option value="toYenFromYuan">元→円</option>
     </select>
     <br><br>
 
@@ -73,35 +65,48 @@
 
         const usdToJpyUrl = 'https://v6.exchangerate-api.com/v6/77ceb4bfd00b965fe0a35a69/latest/USD';
         const usdToCnyUrl = 'https://v6.exchangerate-api.com/v6/77ceb4bfd00b965fe0a35a69/latest/CNY';
+        
         let yenBalance = 0;
         let centBalance = 0;
         let yuanBalance = 0;
         let exchangeCount = 0;
-        let exchangeRateUsdToJpy = 0;
-        let exchangeRateUsdToCny = 0;
+        let exchangeRateYen = 0;
+        let exchangeRateYuan = 0;
 
         function fetchBalances() {
             yenRef.on('value', (snapshot) => {
+                console.log("Yen data retrieved:", snapshot.val());
                 yenBalance = snapshot.val() || 0;
                 document.getElementById('JpyBalance').innerHTML = `
                 <img src="omote.png" width="25px" alt="1円" style="vertical-align: middle; display:inline-block;">×${yenBalance}枚`;
+            }, (error) => {
+                console.error("Error fetching yen balance:", error);
             });
 
             centRef.on('value', (snapshot) => {
+                console.log("Cent data retrieved:", snapshot.val());
                 centBalance = snapshot.val() || 0;
                 document.getElementById('UsdBalance').innerHTML = `
                 <img src="1cent-omote.png" width="25px" alt="1セント" style="vertical-align: middle; display:inline-block;">×${centBalance}枚`;
+            }, (error) => {
+                console.error("Error fetching cent balance:", error);
             });
 
             yuanRef.on('value', (snapshot) => {
+                console.log("Yuan data retrieved:", snapshot.val());
                 yuanBalance = snapshot.val() || 0;
                 document.getElementById('YuanBalance').innerHTML = `
                 <img src="1yuan-omote.png" width="25px" alt="1元" style="vertical-align: middle; display:inline-block;">×${yuanBalance}枚`;
+            }, (error) => {
+                console.error("Error fetching yuan balance:", error);
             });
 
             exchangeCountRef.on('value', (snapshot) => {
+                console.log("Exchange count data retrieved:", snapshot.val());
                 exchangeCount = snapshot.val() || 0;
                 updateExchangeCountDisplay();
+            }, (error) => {
+                console.error("Error fetching exchange count:", error);
             });
         }
 
@@ -120,16 +125,21 @@
 
         function getExchangeRates() {
             return Promise.all([
-                fetch(usdToJpyUrl).then(response => response.json()),
-                fetch(usdToCnyUrl).then(response => response.json())
-            ]).then(data => {
-                if (data[0].result === "success" && data[1].result === "success") {
-                    exchangeRateUsdToJpy = data[0].conversion_rates.JPY / 100;
-                    exchangeRateUsdToCny = data[1].conversion_rates.CNY / 100;
-                } else {
-                    throw new Error("Failed to fetch exchange rates.");
-                }
-            });
+                fetch(usdToJpyUrl).then(response => response.json()).then(data => {
+                    if (data.result === "success") {
+                        exchangeRateYen = data.conversion_rates.JPY / data.JPY;
+                    } else {
+                        throw new Error(`エラー: ${data['error-type']}`);
+                    }
+                }),
+                fetch(usdToCnyUrl).then(response => response.json()).then(data => {
+                    if (data.result === "success") {
+                        exchangeRateYuan = data.conversion_rates.CNY * data.conversion_rates.JPY;
+                    } else {
+                        throw new Error(`エラー: ${data['error-type']}`);
+                    }
+                })
+            ]);
         }
 
         function exchange() {
@@ -146,52 +156,70 @@
             }
 
             getExchangeRates().then(() => {
-                let requiredAmount, roundedAmount, balance, balanceRef, currency;
-
-                if (exchangeDirection === "toYuan") {
-                    // 円→元
-                    requiredAmount = desiredAmount / exchangeRateUsdToCny;
-                    roundedAmount = Math.ceil(requiredAmount);
-                    balance = yenBalance;
-                    balanceRef = yenRef;
-                    currency = '円';
-
-                    if (roundedAmount > yenBalance) {
-                        alert(`${desiredAmount} 元は約 ${requiredAmount.toFixed(2)} 円です。\n所持している円の残高が不足しています。`);
+                if (exchangeDirection === "toYen") {
+                    const requiredCentAmount = desiredAmount / exchangeRateYen;
+                    const roundedCentAmount = Math.ceil(requiredCentAmount);
+                    if (roundedCentAmount > centBalance) {
+                        alert(`${desiredAmount} 円は約 ${requiredCentAmount.toFixed(2)} セントです。\n所持しているセントの残高が不足しています。`);
                         return;
                     }
-
-                } else if (exchangeDirection === "toJpy") {
-                    // 元→円
-                    requiredAmount = desiredAmount * exchangeRateUsdToCny;
-                    roundedAmount = Math.ceil(requiredAmount);
-                    balance = yuanBalance;
-                    balanceRef = yuanRef;
-                    currency = '元';
-
-                    if (roundedAmount > yuanBalance) {
-                        alert(`${desiredAmount} 円は約 ${requiredAmount.toFixed(2)} 元です。\n所持している元の残高が不足しています。`);
-                        return;
-                    }
-                } else {
-                    return; // Handle other directions
-                }
-
-                if (confirm(`${desiredAmount} ${currency}を ${roundedAmount} に両替します。よろしいですか？`)) {
-                    if (exchangeDirection === "toYuan") {
-                        yenBalance -= roundedAmount;
-                        yuanBalance += desiredAmount;
-                    } else {
-                        yuanBalance -= roundedAmount;
+                    const confirmation = confirm(`${desiredAmount} 円は約 ${requiredCentAmount.toFixed(2)} セントです。\n切り上げて ${roundedCentAmount} セントになりますが、よろしいですか？`);
+                    if (confirmation) {
+                        centBalance -= roundedCentAmount;
                         yenBalance += desiredAmount;
+                        exchangeCount += 1;
+                        updateBalances();
+                        alert(`${roundedCentAmount} セントを ${desiredAmount} 円に両替しました。`);
                     }
-                    exchangeCount += 1;
-                    updateBalances();
-                    alert(`${roundedAmount} ${currency}を両替しました。`);
+                } else if (exchangeDirection === "toCent") {
+                    const requiredYenAmount = desiredAmount * exchangeRateYen;
+                    const roundedYenAmount = Math.ceil(requiredYenAmount);
+                    if (roundedYenAmount > yenBalance) {
+                        alert(`${desiredAmount} セントは約 ${requiredYenAmount.toFixed(2)} 円です。\n所持している円の残高が不足しています。`);
+                        return;
+                    }
+                    const confirmation = confirm(`${desiredAmount} セントは約 ${requiredYenAmount.toFixed(2)} 円です。\n切り上げて ${roundedYenAmount} 円になりますが、よろしいですか？`);
+                    if (confirmation) {
+                        yenBalance -= roundedYenAmount;
+                        centBalance += desiredAmount;
+                        exchangeCount += 1;
+                        updateBalances();
+                        alert(`${roundedYenAmount} 円を ${desiredAmount} セントに両替しました。`);
+                    }
+                } else if (exchangeDirection === "toYuan") {
+                    const requiredYenAmount = desiredAmount * exchangeRateYuan;
+                    const roundedYenAmount = Math.ceil(requiredYenAmount);
+                    if (roundedYenAmount > yenBalance) {
+                        alert(`${desiredAmount} 元は約 ${requiredYenAmount.toFixed(2)} 円です。\n所持している円の残高が不足しています。`);
+                        return;
+                    }
+                    const confirmation = confirm(`${desiredAmount} 元は約 ${requiredYenAmount.toFixed(2)} 円です。\n切り上げて ${roundedYenAmount} 円になりますが、よろしいですか？`);
+                    if (confirmation) {
+                        yenBalance -= roundedYenAmount;
+                        yuanBalance += desiredAmount;
+                        exchangeCount += 1;
+                        updateBalances();
+                        alert(`${roundedYenAmount} 円を ${desiredAmount} 元に両替しました。`);
+                    }
+                } else if (exchangeDirection === "toYenFromYuan") {
+                    const requiredYuanAmount = desiredAmount / exchangeRateYuan;
+                    const roundedYuanAmount = Math.ceil(requiredYuanAmount);
+                    if (roundedYuanAmount > yuanBalance) {
+                        alert(`${desiredAmount} 円は約 ${requiredYuanAmount.toFixed(2)} 元です。\n所持している元の残高が不足しています。`);
+                        return;
+                    }
+                    const confirmation = confirm(`${desiredAmount} 円は約 ${requiredYuanAmount.toFixed(2)} 元です。\n切り上げて ${roundedYuanAmount} 元になりますが、よろしいですか？`);
+                    if (confirmation) {
+                        yuanBalance -= roundedYuanAmount;
+                        yenBalance += desiredAmount;
+                        exchangeCount += 1;
+                        updateBalances();
+                        alert(`${roundedYuanAmount} 元を ${desiredAmount} 円に両替しました。`);
+                    }
                 }
             }).catch(error => {
                 console.error(error);
-                alert('エラーが発生しました');
+                alert('エラーが発生しました。もう一度お試しください。');
             });
         }
 
