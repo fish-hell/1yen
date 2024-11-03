@@ -69,10 +69,7 @@
   }
 
   // Run checkLocation every 10 seconds
-  window.onload = () => {
-    checkLocation();
-    setInterval(checkLocation, 10000); // Repeat check every 10 seconds
-  };
+  window.onload = checkLocation()
 </script>
 
 </body>
