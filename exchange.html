@@ -135,58 +135,134 @@
         }
 
         function exchange() {
-            const exchangeDirection = document.getElementById('exchangeDirection').value;
-            const desiredAmount = parseFloat(document.getElementById('amount').value);
-            if (desiredAmount <= 0 || isNaN(desiredAmount)) {
-                alert('正しい金額を入力してください。');
+    const exchangeDirection = document.getElementById('exchangeDirection').value;
+    const desiredAmount = parseFloat(document.getElementById('amount').value);
+    if (desiredAmount <= 0 || isNaN(desiredAmount)) {
+        alert('正しい金額を入力してください。');
+        return;
+    }
+
+    getExchangeRates().then(() => {
+        if (exchangeDirection === "toCent") {
+            const requiredJpyAmount = (desiredAmount / usdRate) / 10000;
+            const roundedJpyAmount = Math.ceil(requiredJpyAmount);
+
+            if (roundedJpyAmount > jpyBalance) {
+                alert(`${desiredAmount} セントは約 ${requiredJpyAmount.toFixed(2)} 円です。\n所持している円の残高が不足しています。`);
                 return;
             }
 
-            getExchangeRates().then(() => {
-                if (exchangeDirection === "toRand") {
-                    const requiredJpyAmount = desiredAmount / zarRate;
-                    const roundedJpyAmount = Math.ceil(requiredJpyAmount);
+            const confirmation = confirm(
+                `${desiredAmount} セントは約 ${requiredJpyAmount.toFixed(2)} 円です。\n切り上げて ${roundedJpyAmount} 円になりますが、よろしいですか？`
+            );
 
-                    if (roundedJpyAmount > jpyBalance) {
-                        alert(`${desiredAmount} ランドは約 ${requiredJpyAmount.toFixed(2)} 円です。\n所持している円の残高が不足しています。`);
-                        return;
-                    }
+            if (confirmation) {
+                jpyBalance -= roundedJpyAmount;
+                usdBalance += desiredAmount;
+                updateBalances();
+                alert(`${roundedJpyAmount} 円を ${desiredAmount} セントに両替しました。`);
+            }
+        } else if (exchangeDirection === "toYen") {
+            const requiredCentAmount = desiredAmount * usdRate * 10000;
+            const roundedCentAmount = Math.ceil(requiredCentAmount);
 
-                    const confirmation = confirm(
-                        `${desiredAmount} ランドは約 ${requiredJpyAmount.toFixed(2)} 円です。\n切り上げて ${roundedJpyAmount} 円になりますが、よろしいですか？`
-                    );
+            if (roundedCentAmount > usdBalance) {
+                alert(`${desiredAmount} 円は約 ${requiredCentAmount.toFixed(2)} セントです。\n所持しているセントの残高が不足しています。`);
+                return;
+            }
 
-                    if (confirmation) {
-                        jpyBalance -= roundedJpyAmount;
-                        zarBalance += desiredAmount;
-                        updateBalances();
-                        alert(`${roundedJpyAmount} 円を ${desiredAmount} ランドに両替しました。`);
-                    }
-                } else if (exchangeDirection === "fromRand") {
-                    const requiredZarAmount = desiredAmount * zarRate;
-                    const roundedZarAmount = Math.ceil(requiredZarAmount);
+            const confirmation = confirm(
+                `${desiredAmount} 円は約 ${requiredCentAmount.toFixed(2)} セントです。\n切り上げて ${roundedCentAmount} セントになりますが、よろしいですか？`
+            );
 
-                    if (roundedZarAmount > zarBalance) {
-                        alert(`${desiredAmount} 円は約 ${requiredZarAmount.toFixed(2)} ランドです。\n所持しているランドの残高が不足しています。`);
-                        return;
-                    }
+            if (confirmation) {
+                usdBalance -= roundedCentAmount;
+                jpyBalance += desiredAmount;
+                updateBalances();
+                alert(`${roundedCentAmount} セントを ${desiredAmount} 円に両替しました。`);
+            }
+        } else if (exchangeDirection === "toYuan") {
+            const requiredJpyAmount = desiredAmount / cnyRate;
+            const roundedJpyAmount = Math.ceil(requiredJpyAmount);
 
-                    const confirmation = confirm(
-                        `${desiredAmount} 円は約 ${requiredZarAmount.toFixed(2)} ランドです。\n切り上げて ${roundedZarAmount} ランドになりますが、よろしいですか？`
-                    );
+            if (roundedJpyAmount > jpyBalance) {
+                alert(`${desiredAmount} 元は約 ${requiredJpyAmount.toFixed(2)} 円です。\n所持している円の残高が不足しています。`);
+                return;
+            }
 
-                    if (confirmation) {
-                        zarBalance -= roundedZarAmount;
-                        jpyBalance += desiredAmount;
-                        updateBalances();
-                        alert(`${roundedZarAmount} ランドを ${desiredAmount} 円に両替しました。`);
-                    }
-                }
-            }).catch(error => {
-                console.error(error);
-                alert('エラーが発生しました');
-            });
+            const confirmation = confirm(
+                `${desiredAmount} 元は約 ${requiredJpyAmount.toFixed(2)} 円です。\n切り上げて ${roundedJpyAmount} 円になりますが、よろしいですか？`
+            );
+
+            if (confirmation) {
+                jpyBalance -= roundedJpyAmount;
+                cnyBalance += desiredAmount;
+                updateBalances();
+                alert(`${roundedJpyAmount} 円を ${desiredAmount} 元に両替しました。`);
+            }
+        } else if (exchangeDirection === "fromYuan") {
+            const requiredYuanAmount = desiredAmount * cnyRate;
+            const roundedYuanAmount = Math.ceil(requiredYuanAmount);
+
+            if (roundedYuanAmount > cnyBalance) {
+                alert(`${desiredAmount} 円は約 ${requiredYuanAmount.toFixed(2)} 元です。\n所持している元の残高が不足しています。`);
+                return;
+            }
+
+            const confirmation = confirm(
+                `${desiredAmount} 円は約 ${requiredYuanAmount.toFixed(2)} 元です。\n切り上げて ${roundedYuanAmount} 元になりますが、よろしいですか？`
+            );
+
+            if (confirmation) {
+                cnyBalance -= roundedYuanAmount;
+                jpyBalance += desiredAmount;
+                updateBalances();
+                alert(`${roundedYuanAmount} 元を ${desiredAmount} 円に両替しました。`);
+            }
+        } else if (exchangeDirection === "toRand") {
+            const requiredJpyAmount = desiredAmount / zarRate;
+            const roundedJpyAmount = Math.ceil(requiredJpyAmount);
+
+            if (roundedJpyAmount > jpyBalance) {
+                alert(`${desiredAmount} ランドは約 ${requiredJpyAmount.toFixed(2)} 円です。\n所持している円の残高が不足しています。`);
+                return;
+            }
+
+            const confirmation = confirm(
+                `${desiredAmount} ランドは約 ${requiredJpyAmount.toFixed(2)} 円です。\n切り上げて ${roundedJpyAmount} 円になりますが、よろしいですか？`
+            );
+
+            if (confirmation) {
+                jpyBalance -= roundedJpyAmount;
+                zarBalance += desiredAmount;
+                updateBalances();
+                alert(`${roundedJpyAmount} 円を ${desiredAmount} ランドに両替しました。`);
+            }
+        } else if (exchangeDirection === "fromRand") {
+            const requiredZarAmount = desiredAmount * zarRate;
+            const roundedZarAmount = Math.ceil(requiredZarAmount);
+
+            if (roundedZarAmount > zarBalance) {
+                alert(`${desiredAmount} 円は約 ${requiredZarAmount.toFixed(2)} ランドです。\n所持しているランドの残高が不足しています。`);
+                return;
+            }
+
+            const confirmation = confirm(
+                `${desiredAmount} 円は約 ${requiredZarAmount.toFixed(2)} ランドです。\n切り上げて ${roundedZarAmount} ランドになりますが、よろしいですか？`
+            );
+
+            if (confirmation) {
+                zarBalance -= roundedZarAmount;
+                jpyBalance += desiredAmount;
+                updateBalances();
+                alert(`${roundedZarAmount} ランドを ${desiredAmount} 円に両替しました。`);
+            }
         }
+    }).catch(error => {
+        console.error(error);
+        alert('エラーが発生しました');
+    });
+}
 
         fetchBalances();
     </script>
