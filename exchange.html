@@ -8,7 +8,7 @@
         body {
           font-family: Arial, sans-serif;
         }
-        #JpyBalance, #UsdBalance, #CnyBalance {
+        #jpyBalance, #usdBalance, #cnyBalance, #zarBalance {
             position: absolute;
             top: 10px;
             background-color: #ffeb3b;
@@ -17,29 +17,36 @@
             font-weight: bold;
             z-index: 100;
         }
-        #JpyBalance {
+        #jpyBalance {
             left: 10px;
         }
-        #UsdBalance {
+        #usdBalance {
             left: 130px;
         }
-        #CnyBalance {
+        #cnyBalance {
             left: 250px;
+        }
+        #zarBalance {
+            left: 10px;
+            top: 70px;
         }
     </style>
 </head>
 <body>
-    <br><br>
-    <div id="JpyBalance">読み込み中</div>
-    <div id="UsdBalance">読み込み中</div>
-    <div id="CnyBalance">読み込み中</div>
-    <h1>両替システム</h1>
+    <br><br><br><br><br>
+    <div id="jpyBalance">読み込み中</div>
+    <div id="usdBalance">読み込み中</div>
+    <div id="cnyBalance">読み込み中</div>
+    <div id="zarBalance">読み込み中</div>
+    <h1>両替システム v1.4</h1>
 
     <select id="exchangeDirection">
         <option value="toCent">円→セント</option>
         <option value="toYen">セント→円</option>
         <option value="toYuan">円→元</option>
         <option value="fromYuan">元→円</option>
+        <option value="toRand">円→ランド</option>
+        <option value="fromRand">ランド→円</option>
     </select>
     <br><br>
 
@@ -63,40 +70,50 @@
         firebase.initializeApp(firebaseConfig);
 
         const centRef = firebase.database().ref('centCount');
-        const yenRef = firebase.database().ref('coinCount');
-        const yuanRef = firebase.database().ref('yuanCount');
+        const jpyRef = firebase.database().ref('coinCount');
+        const cnyRef = firebase.database().ref('yuanCount');
+        const zarRef = firebase.database().ref('randCount');
 
         const exchangeRatesUrl = 'https://v6.exchangerate-api.com/v6/77ceb4bfd00b965fe0a35a69/latest/JPY';
-        let yenBalance = 0;
-        let centBalance = 0;
-        let yuanBalance = 0;
+        let jpyBalance = 0;
+        let usdBalance = 0;
+        let cnyBalance = 0;
+        let zarBalance = 0;
         let usdRate = 0;
         let cnyRate = 0;
+        let zarRate = 0;
 
         function fetchBalances() {
-            yenRef.on('value', (snapshot) => {
-                yenBalance = snapshot.val() || 0;
-                document.getElementById('JpyBalance').innerHTML = `
-                <img src="omote.png" width="25px" alt="1円" style="vertical-align: middle; display:inline-block;">×${yenBalance}枚`;
+            jpyRef.on('value', (snapshot) => {
+                jpyBalance = snapshot.val() || 0;
+                document.getElementById('jpyBalance').innerHTML = `
+                <img src="omote.png" width="25px" alt="1円" style="vertical-align: middle; display:inline-block;">×${jpyBalance}枚`;
             });
 
             centRef.on('value', (snapshot) => {
-                centBalance = snapshot.val() || 0;
-                document.getElementById('UsdBalance').innerHTML = `
-                <img src="1cent-omote.png" width="25px" alt="1セント" style="vertical-align: middle; display:inline-block;">×${centBalance}枚`;
+                usdBalance = snapshot.val() || 0;
+                document.getElementById('usdBalance').innerHTML = `
+                <img src="1cent-omote.png" width="25px" alt="1セント" style="vertical-align: middle; display:inline-block;">×${usdBalance}枚`;
             });
 
-            yuanRef.on('value', (snapshot) => {
-                yuanBalance = snapshot.val() || 0;
-                document.getElementById('CnyBalance').innerHTML = `
-                <img src="1yuan-omote.png" width="25px" alt="1元" style="vertical-align: middle; display:inline-block;">×${yuanBalance}枚`;
+            cnyRef.on('value', (snapshot) => {
+                cnyBalance = snapshot.val() || 0;
+                document.getElementById('cnyBalance').innerHTML = `
+                <img src="1yuan-omote.png" width="25px" alt="1元" style="vertical-align: middle; display:inline-block;">×${cnyBalance}枚`;
+            });
+
+            zarRef.on('value', (snapshot) => {
+                zarBalance = snapshot.val() || 0;
+                document.getElementById('zarBalance').innerHTML = `
+                <img src="1rand-omote.png" width="25px" alt="1ランド" style="vertical-align: middle; display:inline-block;">×${zarBalance}枚`;
             });
         }
 
         function updateBalances() {
-            yenRef.set(yenBalance);
-            centRef.set(centBalance);
-            yuanRef.set(yuanBalance);
+            jpyRef.set(jpyBalance);
+            centRef.set(usdBalance);
+            cnyRef.set(cnyBalance);
+            zarRef.set(zarBalance);
         }
 
         function getExchangeRates() {
@@ -107,6 +124,7 @@
                         if (data.result === "success") {
                             usdRate = data.conversion_rates.USD / 100;
                             cnyRate = data.conversion_rates.CNY;
+                            zarRate = data.conversion_rates.ZAR;
                             resolve();
                         } else {
                             reject(`エラー: ${data['error-type']}`);
@@ -125,43 +143,43 @@
             }
 
             getExchangeRates().then(() => {
-                if (exchangeDirection === "toYuan") {
-                    const requiredYenAmount = desiredAmount / cnyRate;
-                    const roundedYenAmount = Math.ceil(requiredYenAmount);
+                if (exchangeDirection === "toRand") {
+                    const requiredJpyAmount = desiredAmount / zarRate;
+                    const roundedJpyAmount = Math.ceil(requiredJpyAmount);
 
-                    if (roundedYenAmount > yenBalance) {
-                        alert(`${desiredAmount} 元は約 ${requiredYenAmount.toFixed(2)} 円です。\n所持している円の残高が不足しています。`);
+                    if (roundedJpyAmount > jpyBalance) {
+                        alert(`${desiredAmount} ランドは約 ${requiredJpyAmount.toFixed(2)} 円です。\n所持している円の残高が不足しています。`);
                         return;
                     }
 
                     const confirmation = confirm(
-                        `${desiredAmount} 元は約 ${requiredYenAmount.toFixed(2)} 円です。\n切り上げて ${roundedYenAmount} 円になりますが、よろしいですか？`
+                        `${desiredAmount} ランドは約 ${requiredJpyAmount.toFixed(2)} 円です。\n切り上げて ${roundedJpyAmount} 円になりますが、よろしいですか？`
                     );
 
                     if (confirmation) {
-                        yenBalance -= roundedYenAmount;
-                        yuanBalance += desiredAmount;
+                        jpyBalance -= roundedJpyAmount;
+                        zarBalance += desiredAmount;
                         updateBalances();
-                        alert(`${roundedYenAmount} 円を ${desiredAmount} 元に両替しました。`);
+                        alert(`${roundedJpyAmount} 円を ${desiredAmount} ランドに両替しました。`);
                     }
-                } else if (exchangeDirection === "fromYuan") {
-                    const requiredYuanAmount = desiredAmount * cnyRate;
-                    const roundedYuanAmount = Math.ceil(requiredYuanAmount);
+                } else if (exchangeDirection === "fromRand") {
+                    const requiredZarAmount = desiredAmount * zarRate;
+                    const roundedZarAmount = Math.ceil(requiredZarAmount);
 
-                    if (roundedYuanAmount > yuanBalance) {
-                        alert(`${desiredAmount} 円は約 ${requiredYuanAmount.toFixed(2)} 元です。\n所持している元の残高が不足しています。`);
+                    if (roundedZarAmount > zarBalance) {
+                        alert(`${desiredAmount} 円は約 ${requiredZarAmount.toFixed(2)} ランドです。\n所持しているランドの残高が不足しています。`);
                         return;
                     }
 
                     const confirmation = confirm(
-                        `${desiredAmount} 円は約 ${requiredYuanAmount.toFixed(2)} 元です。\n切り上げて ${roundedYuanAmount} 元になりますが、よろしいですか？`
+                        `${desiredAmount} 円は約 ${requiredZarAmount.toFixed(2)} ランドです。\n切り上げて ${roundedZarAmount} ランドになりますが、よろしいですか？`
                     );
 
                     if (confirmation) {
-                        yuanBalance -= roundedYuanAmount;
-                        yenBalance += desiredAmount;
+                        zarBalance -= roundedZarAmount;
+                        jpyBalance += desiredAmount;
                         updateBalances();
-                        alert(`${roundedYuanAmount} 元を ${desiredAmount} 円に両替しました。`);
+                        alert(`${roundedZarAmount} ランドを ${desiredAmount} 円に両替しました。`);
                     }
                 }
             }).catch(error => {
