@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>1ランドギャンブル オンライン</title>
+  <link rel="stylesheet" href="chat.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .menu-button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: transparent;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      z-index: 100;
+    }
+
+    .textmenu-button {
+      background-color: transparent;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      z-index: 100;
+    }
+
+    .menu {
+      display: none;
+      position: absolute;
+      top: 50px;
+      right: 10px;
+      background-color: rgba(255, 255, 255, 0.9);
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      z-index: 100;
+    }
+
+    .textmenu {
+      display: none;
+      position: absolute;
+      bottom: 50px;
+      left: 10px;
+      background-color: rgba(255, 255, 255, 0.9);
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      z-index: 1000;
+    } 
+  
+  
+    .coin-count {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background-color: #ffeb3b;
+      padding: 10px 20px;
+      border-radius: 5px;
+      font-weight: bold;
+      z-index: 100;
+    }
+
+    .chat-container {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      height: 50%;
+      background-color: #f1f1f1;
+      border-top: 2px solid #ddd;
+      padding: 10px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chat-messages {
+      overflow-y: auto;
+      flex-grow: 1;
+      margin-bottom: 10px;
+    }
+
+    .message-input-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    #message-input {
+      width: calc(100% - 120px);
+      padding: 8px;
+    }
+
+    #send-button {
+      padding: 8px 16px;
+      height: 35px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    .message {
+      padding: 5px;
+      margin-bottom: 10px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .meta-info {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85em;
+      color: #555;
+    }
+
+    .text {
+      margin-top: 5px;
+    }
+
+    .game-container {
+      padding: 20px;
+      background-color: #fafafa;
+      border-bottom: 2px solid #ddd;
+    }
+
+    .game-container h2 {
+      margin-top: 0;
+    }
+
+    .game-controls {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .game-controls label {
+      margin-right: 10px;
+    }
+
+    .game-controls input[type="radio"] {
+      margin-right: 5px;
+    }
+
+    .game-controls select {
+      margin: 0 10px;
+      padding: 5px;
+    }
+
+    #bet-button {
+      padding: 8px 16px;
+      background-color: #2196F3;
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    #bet-button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+
+    .coins-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .coin {
+      background-size: cover;
+      animation: flip 0.3s infinite;
+    }
+
+    @keyframes flip {
+      0% { transform: rotateY(0deg); }
+      25% { transform: rotateY(100deg); }
+      50% { transform: rotateY(360deg); }
+      100% { transform: rotateY(0deg); }
+    }
+
+    .result {
+      text-align: center;
+      font-size: 1.2em;
+      font-weight: bold;
+    }
+
+  </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+
+  <div class="coin-count" id="coin-count">読み込み中</div>
+
+  <button class="menu-button" id="menu-button"><i class="fa-solid fa-bars"></i></button>
+
+  <div class="menu" id="menu">
+    <input type="text" id="chat-name" placeholder="チャットのニックネーム">
+    <button id="set-chat-name">✔</button>
+    <br><br>
+    <button id="claim-bonus">おみくじを引く</button>
+    <br><br>
+    <label for="prob-input">code</label><br>
+    <input type="text" id="prob-input" placeholder="コードを入力してください">
+    <button id="set-probabilities">✔</button>
+    <div id="active-users">
+      <p>参加中ユーザー</p>
+      <ul id="user-list"></ul>
+    </div>    
+    
+  </div>
+  
+
+  <div class="textmenu" id="textmenu">
+       <input type="color" list="colors" id="colorinput">
+    <datalist id="colors">
+
+  <option value="#000000"></option>
+  <option value="#333333"></option>
+  <option value="#777777"></option>
+  <option value="#aaaaaa"></option>
+  <option value="#ffffff"></option>
+
+  <option value="#770000"></option>
+  <option value="#aa0000"></option>
+  <option value="#ff0000"></option>
+  <option value="#ff7777"></option>
+  <option value="#ffaaaa"></option>
+
+  <option value="#774400"></option>
+  <option value="#aa5500"></option>
+  <option value="#ff7700"></option>
+  <option value="#ffaa77"></option>
+  <option value="#ffdd99"></option>
+
+  <option value="#777700"></option>
+  <option value="#aaaa00"></option>
+  <option value="#ffff00"></option>
+  <option value="#ffff77"></option>
+  <option value="#ffffaa"></option>
+
+  <option value="#007700"></option>
+  <option value="#00aa00"></option>
+  <option value="#00ff00"></option>
+  <option value="#77ff77"></option>
+  <option value="#aaffaa"></option>
+
+  <option value="#007755"></option>
+  <option value="#00aa77"></option>
+  <option value="#00ffaa"></option>
+  <option value="#77ffcc"></option>
+  <option value="#aaffdd"></option>
+
+  <option value="#007777"></option>
+  <option value="#00aaaa"></option>
+  <option value="#00ffff"></option>
+  <option value="#77ffff"></option>
+  <option value="#aaffff"></option>
+
+  <option value="#000077"></option>
+  <option value="#0000aa"></option>
+  <option value="#0000ff"></option>
+  <option value="#7777ff"></option>
+  <option value="#aaaaff"></option>
+
+  <option value="#440077"></option>
+  <option value="#7700aa"></option>
+  <option value="#aa00ff"></option>
+  <option value="#cc77ff"></option>
+  <option value="#ddaaff"></option>
+
+  <option value="#770077"></option>
+  <option value="#aa00aa"></option>
+  <option value="#ff00ff"></option>
+  <option value="#ff77ff"></option>
+  <option value="#ffaaff"></option>
+
+  <option value="#770022"></option>
+  <option value="#aa0033"></option>
+  <option value="#ff0055"></option>
+  <option value="#ff5577"></option>
+  <option value="#ff88aa"></option>
+</datalist>
+
+    <label>
+      <input type="checkbox" value="b">
+      <b>B</b>
+      <input type="checkbox" value="i">
+      <i>I</i>
+      <input type="checkbox" value="s">
+      <s>S</s>
+      <input type="checkbox" value="u">
+      <u>U</u>
+    <br>
+    <input type="radio" name="fontsize" value="0" checked>
+    標準
+    <input type="radio" name="fontsize" value="1">
+    <span style="font-size: 1.7em;">大</span>
+    <input type="radio" name="fontsize" value="2">
+    <span style="font-size: 1.3em;">中</span>
+    <input type="radio" name="fontsize" value="3">
+    <span style="font-size: 0.7em">小</span>
+    </label>
+    <button onclick="applyText()">適用</button>
+  </div>
+
+  <div class="game-container" id="game-container">
+    <p>　　　　　　　　1ランドギャンブル v1.0</p>
+    <div class="game-controls">
+      <label>
+        <input type="radio" name="bet-side" value="表" checked>
+        表
+      </label>
+      <label>
+        <input type="radio" name="bet-side" value="裏">
+        裏
+      </label>に
+      <select id="bet-amount">
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+        <option value="6">6</option>
+        <option value="7">7</option>
+        <option value="8">8</option>
+        <option value="9">9</option>
+        <option value="10">10</option>
+      </select>
+      枚　　
+      <button id="bet-button">ベット</button>
+    </div>
+    <div class="coins-container" id="coins-container"></div>
+    <div class="result" id="result"></div>
+  </div>
+
+  <div id="chat-container" class="chat-container">
+    <div id="chat-messages" class="chat-messages"></div>
+
+    <div class="message-input-container">
+      <button class="textmenu-button" id="textmenu-button"><span style="color: #FFD43B;">A</span><span style="font-size: 0.6em; color: #B197FC">A</span></button>
+      <input type="text" id="message-input" placeholder="メッセージを入力">
+      <button id="send-button"><i class="fa-solid fa-paper-plane"></i></button>
+    </div>
+  </div>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <!-- main system -->
+  <script src="1rand-main.js"></script>
+</body>
+</html>
