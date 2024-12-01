@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#333333">
+<title>1円ギャンブル トップ</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f5f5f5;
+    user-select: none;
+  }
+
+  .container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    padding: 20px;
+  }
+
+  .box {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .box:hover {
+    transform: translateY(-5px);
+  }
+
+  .title {
+    font-size: 22px;
+    font-weight: bold;
+    margin-bottom: 10px;
+  }
+
+  .content {
+    font-size: 16px;
+    line-height: 1.6;
+  }
+  .header {
+    text-align: center;
+    padding: 20px 0;
+    background-color: #333;
+    color: #fff;
+  }
+
+  .header h1 {
+    font-size: 48px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  .header p {
+    font-size: 18px;
+    line-height: 1.6;
+    opacity: 0.8;
+  }
+</style>
+</head>
+<body>
+  <div class="header">
+    <h1>1円ギャンブル</h1>
+    <p>あの1円ギャンブルがオンラインで登場！<br>いつでもどこでも<b>1円ギャンブル！</b></p>
+  </div>  
+
+<div class="container">
+  <a href="https://fish-hell.github.io/1yen" class="box">
+    <div class="title">1円ギャンブル</div>
+    <div class="content">初代1円ギャンブル！<br>しかもオンラインチャット付き！</div>
+  </a>
+  <a href="https://fish-hell.github.io/1yen/1cent" class="box">
+    <div class="title">1セントギャンブル</div>
+    <div class="content">初の外国通貨ギャンブル！<br>本物のレートを使用しています。</div>
+  </a>
+  <a href="https://fish-hell.github.io/1yen/1rand" class="box">
+    <div class="title">1ランドギャンブル</div>
+    <div class="content">ランドは南アフリカの通貨です。結構金額が変動します。</div>
+  </a>
+      <a href="https://fish-hell.github.io/1yen/1yuan" class="box">
+    <div class="title">1元ギャンブル</div>
+    <div class="content">金額はあまり変動しませんが、ハイリスクハイリターンなギャンブルができます。</div>
+  </a>
+  <a href="https://fish-hell.github.io/1yen/exchange" class="box">
+    <div class="title">両替</div>
+    <div class="content">Let's両替やぁりましょう！</div>
+  </a>
+  <div class="box" id="comingsoon" onckick="alert('開発中なので、しばらくお待ちください…')">
+    <div class="title">coming soon…</div>
+    <div class="content">かみんぐすーん!</div>
+  </div>
+</div>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+<script src="top.js"></script>
+</body>
+</html>
