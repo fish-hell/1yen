@@ -35,9 +35,9 @@ const firebaseConfig = {
     if (!command.includes("1")) {
       coinRef.once('value').then((coinSnapshot) => {
         if (coinSnapshot.exists()) {
-          const coinCount = coinSnapshot.val() + 30;
+          const coinCount = coinSnapshot.val() + 50;
           coinRef.set(coinCount);
-          alert("隠しコマンドを入力しました。\n1円を30枚入手しました。");
+          alert("隠しコマンドを入力しました。\n1円を50枚入手しました。");
           commandRef.set(command + "1");
         } else {
           alert("error:coinCount not found");
