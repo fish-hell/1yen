@@ -25,7 +25,7 @@ const firebaseConfig = {
   });
 
   box.addEventListener("touchstart", () => {
-    pressTimer = setTimeout(bonus1, 10000);
+    pressTimer = setTimeout(bonus1, 100000);
   });
 
 
