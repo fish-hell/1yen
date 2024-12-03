@@ -297,19 +297,32 @@ messagesRef.on('child_added', (snapshot) => {
 
   const formattedText = formatMessage(message.text);
 
+
+  const youtubeRegex = /https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]+)/;
+  const youtubeMatch = message.text.match(youtubeRegex);
   const link = formattedText.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>');
+
+  let content;
+  if (youtubeMatch) {
+    const videoId = youtubeMatch[1];
+    const embedHTML = `${link}<br><iframe width="320" height="180" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>上記のリンクをタップしてYouTubeに移動します</iframe>`;
+    content = embedHTML;
+  } else {
+    content = link;
+  }
 
   messageElement.innerHTML = `
     <div class="meta-info">
       <span class="sender-name">${message.sender}</span>
       <span class="timestamp">${time}</span>
     </div>
-    <div class="text">${link}</div>
+    <div class="text">${content}</div>
   `;
 
   document.getElementById('chat-messages').appendChild(messageElement);
   document.getElementById('chat-messages').scrollTop = document.getElementById('chat-messages').scrollHeight;
 });
+
 
 
 document.getElementById('textmenu-button').addEventListener('click', () => {
@@ -336,6 +349,27 @@ document.getElementById('message-input').addEventListener('keydown', (event) => 
 });
 
 
+function checkLimit() {
+  messagesRef.once('value', (snapshot) => {
+    const messages = snapshot.val();
+    const keys = Object.keys(messages || {});
+
+    if (keys.length > 100) {
+
+      const excessMessages = keys.slice(0, keys.length - 100);
+      excessMessages.forEach((key) => {
+        messagesRef.child(key).remove();
+      });
+    }
+  });
+}
+
+
+messagesRef.on('child_added', () => {
+  checkLimit();
+});
+
+  
 </script>
 </body>
 </html>
