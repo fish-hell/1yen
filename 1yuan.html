@@ -243,13 +243,14 @@
     <br><br>
     <input type="text" id="prob-input" placeholder="コードを入力">
     <button id="set-probabilities">✔</button>
+    <div id="restBet" style="margin-top: 10px;"></div>
     <div id="active-users">
       <p>参加中ユーザー</p>
       <ul id="user-list"></ul>
     </div>    
   </div>
      <div class="title">
-  <p class="version">1元ギャンブル v2.0</p>
+  <p class="version">1元ギャンブル v2.1</p>
      </div>
   <div class="game-container" id="game-container">
 
@@ -300,9 +301,12 @@
   const messagesRef = firebase.database().ref('messages');
   const probRef = firebase.database().ref('probabilities');
   const usersRef = firebase.database().ref('users');
+  const restBetRef = firebase.database().ref('restBet/yuan');
+  const restBetDateRef = firebase.database().ref('restBet/date');
 
   let chatName = "名無し";
   let yuanCount = 0;
+  let restBet = 0;
   let baseProbability = 50;
   let format = '';
 
@@ -482,11 +486,16 @@ document.getElementById('set-probabilities').addEventListener('click', () => {
     if (yuanCount < betAmount) {
       alert('1元が不足しています');
       return;
+    } else if (restBet <= 0) {
+      alert('本日のベット上限に達しています');
+      return;
     }
+    
 
     betButton.disabled = true;
 
-
+    restBet -= 1
+    
     coinsContainer.innerHTML = '';
     resultContainer.textContent = '';
 
@@ -553,6 +562,9 @@ document.getElementById('set-probabilities').addEventListener('click', () => {
       updateCoinDisplay();
 
       coinRef.set(yuanCount);
+      restBetRef.set(restBet);
+      checkRestBet();
+      
 
       const netChangeText = netChange >= 0 ? `(+${netChange})` : `(${netChange})`;
       resultContainer.textContent = `表 ${headsCount} 裏 ${tailsCount} | 獲得枚数: ${userWin}枚 ${netChangeText}`;
@@ -566,7 +578,7 @@ document.getElementById('set-probabilities').addEventListener('click', () => {
     }, 2500);
   });
   
-   let userName = localStorage.getItem('chatName') || '名無し'; 
+  let userName = localStorage.getItem('chatName') || '名無し'; 
 const userRef = firebase.database().ref(`users/${userName}`);
 
 function setOnlineStatus() {
@@ -606,7 +618,34 @@ function updateUserList() {
     });
 }
 
+
+function checkRestBet() { 
+  const today = new Date().toISOString().split('T')[0]; 
+  restBetDateRef.once('value')
+    .then((snapshot) => {
+      if (snapshot.val() !== today) {
+        restBetDateRef.set(today)
+          .then(() => {
+            restBet = 20;
+            updateRestBetDisplay();
+          });
+      } else {
+        restBetRef.once('value')
+          .then((snapshot) => {
+            restBet = snapshot.val();
+            updateRestBetDisplay();
+          });
+      }
+    });
+}
+
+function updateRestBetDisplay() {
+  document.getElementById('restBet').textContent = `残りBET可能回数:${restBet}`;
+  restBetRef.set(restBet);
+}
+
 window.onload = updateUserList;
+window.onload = checkRestBet;
 
 
   </script>
