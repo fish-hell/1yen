@@ -290,7 +290,7 @@ function formatMessage(text) {
 
 messagesRef.on('child_added', (snapshot) => {
   const message = snapshot.val();
-  const time = new Date(message.timestamp).toLocaleTimeString();
+  const time = new Date(message.timestamp).toLocaleString();
 
   const messageElement = document.createElement('div');
   messageElement.classList.add('message');
