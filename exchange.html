@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -5,10 +6,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>両替システム</title>
     <style>
+
+    * {
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+       box-sizing: border-box;
+    }
         body {
           font-family: Arial, sans-serif;
         }
-        #jpyBalance, #usdBalance, #cnyBalance, #zarBalance {
+        #jpyBalance, #usdBalance, #cnyBalance, #zarBalance, #gelBalance {
             position: absolute;
             top: 10px;
             background-color: #ffeb3b;
@@ -30,6 +37,38 @@
             left: 10px;
             top: 70px;
         }
+
+        #gelBalance {
+            left: 130px;
+            top: 70px;
+        }
+
+        #amount {
+            font-size: 20px;
+            width: 100px;
+        }
+        .exchange {
+        width: 80px;
+        height: 35px;
+        font-size: 15px;
+        color: #fff;
+        cursor: pointer;
+        padding: 8px 16px;
+        text-align:center;
+        border: none;
+        background-size: 300% 100%;
+        border-radius: 5px;
+        -webkit-transition: all .4s ease-in-out;
+        transition: all .4s ease-in-out;
+        background-image: linear-gradient(to right, #ed6ea0, #ec8c69, #f7186a , #FBB03B);
+        box-shadow: 0 4px 15px 0 #ff3bbabf;
+        }
+
+  .exchange:hover {
+    background-position: 100% 0;
+    -webkit-transition: all .4s ease-in-out;
+    transition: all .4s ease-in-out;
+}
     </style>
 </head>
 <body>
@@ -38,21 +77,25 @@
     <div id="usdBalance">読み込み中</div>
     <div id="cnyBalance">読み込み中</div>
     <div id="zarBalance">読み込み中</div>
-    <h1>両替システム v1.5</h1>
+    <div id="gelBalance">読み込み中</div>
+    <h1>両替システム v1.6</h1>
 
-    <select id="exchangeDirection">
+
+    <select id="exchangeDirection" oninput="changeLabel(this.value)" style="font-size: 17px;">
         <option value="toCent">円→セント</option>
-        <option value="toYen">セント→円</option>
+        <option value="fromCent">セント→円</option>
         <option value="toYuan">円→元</option>
         <option value="fromYuan">元→円</option>
         <option value="toRand">円→ランド</option>
         <option value="fromRand">ランド→円</option>
+        <option value="toLari">円→ラリ</option>
+        <option value="fromLari">ラリ→円</option>
     </select>
     <br><br>
 
     <label for="amount">希望金額: </label>
-    <input type="number" id="amount" placeholder="金額を入力">
-    <button onclick="exchange()">両替</button>
+    <input type="number" id="amount" placeholder="金額"><label id="monaylabel" style="margin-right: 20px; font-size: 20px;">円</label>
+    <button onclick="exchange()" class="exchange">両替</button>
 
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
@@ -73,15 +116,18 @@
         const jpyRef = firebase.database().ref('coinCount');
         const cnyRef = firebase.database().ref('yuanCount');
         const zarRef = firebase.database().ref('randCount');
+        const gelRef = firebase.database().ref('lariCount');
 
         const exchangeRatesUrl = 'https://v6.exchangerate-api.com/v6/77ceb4bfd00b965fe0a35a69/latest/JPY';
         let jpyBalance = 0;
         let usdBalance = 0;
         let cnyBalance = 0;
         let zarBalance = 0;
+        let gelBalance = 0;
         let usdRate = 0;
         let cnyRate = 0;
         let zarRate = 0;
+        let gelRate = 0;
 
         function fetchBalances() {
             jpyRef.on('value', (snapshot) => {
@@ -107,6 +153,12 @@
                 document.getElementById('zarBalance').innerHTML = `
                 <img src="1rand-omote.png" width="25px" alt="1ランド" style="vertical-align: middle; display:inline-block;">×${zarBalance}枚`;
             });
+
+            gelRef.on('value', (snapshot) => {
+                gelBalance = snapshot.val() || 0;
+                document.getElementById('gelBalance').innerHTML = `
+                <img src="1lari-omote.png" width="25px" alt="1ラリ" style="vertical-align: middle; display:inline-block;">×${gelBalance}枚`;
+            });
         }
 
         function updateBalances() {
@@ -114,7 +166,9 @@
             centRef.set(usdBalance);
             cnyRef.set(cnyBalance);
             zarRef.set(zarBalance);
+            gelRef.set(gelBalance);
         }
+    
 
         function getExchangeRates() {
             return new Promise((resolve, reject) => {
@@ -125,6 +179,7 @@
                             usdRate = data.conversion_rates.USD / 100;
                             cnyRate = data.conversion_rates.CNY;
                             zarRate = data.conversion_rates.ZAR;
+                            gelRate = data.conversion_rates.GEL;
                             resolve();
                         } else {
                             reject(`エラー: ${data['error-type']}`);
@@ -162,7 +217,7 @@
                 updateBalances();
                 alert(`${roundedJpyAmount} 円を ${desiredAmount} セントに両替しました。`);
             }
-        } else if (exchangeDirection === "toYen") {
+        } else if (exchangeDirection === "fromCent") {
             const requiredCentAmount = desiredAmount * usdRate * 10000;
             const roundedCentAmount = Math.ceil(requiredCentAmount);
 
@@ -257,12 +312,61 @@
                 updateBalances();
                 alert(`${roundedZarAmount} ランドを ${desiredAmount} 円に両替しました。`);
             }
+        } else if (exchangeDirection === "toLari") {
+            const requiredJpyAmount = desiredAmount / gelRate;
+            const roundedJpyAmount = Math.ceil(requiredJpyAmount);
+
+            if (roundedJpyAmount > jpyBalance) {
+                alert(`${desiredAmount} ラリは約 ${requiredJpyAmount.toFixed(2)} 円です。\n所持している円の残高が不足しています。`);
+                return;
+            }
+
+            const confirmation = confirm(
+                `${desiredAmount} ラリは約 ${requiredJpyAmount.toFixed(2)} 円です。\n切り上げて ${roundedJpyAmount} 円になりますが、よろしいですか？`
+            );
+
+            if (confirmation) {
+                jpyBalance -= roundedJpyAmount;
+                gelBalance += desiredAmount;
+                updateBalances();
+                alert(`${roundedJpyAmount} 円を ${desiredAmount} ラリに両替しました。`);
+            }
+        } else if (exchangeDirection === "fromLari") {
+            const requiredLariAmount = desiredAmount * gelRate;
+            const roundedLariAmount = Math.ceil(requiredLariAmount);
+
+            if (roundedLariAmount > gelBalance) {
+                alert(`${desiredAmount} 円は約 ${requiredLariAmount.toFixed(2)} ラリです。\n所持しているラリの残高が不足しています。`);
+                return;
+            }
+
+            const confirmation = confirm(
+                `${desiredAmount} 円は約 ${requiredLariAmount.toFixed(2)} ラリです。\n切り上げて ${roundedLariAmount} ラリになりますが、よろしいですか？`
+            );
+
+            if (confirmation) {
+                gelBalance -= roundedLariAmount;
+                jpyBalance += desiredAmount;
+                updateBalances();
+                alert(`${roundedLariAmount} ラリを ${desiredAmount} 円に両替しました。`);
+            }
         }
     }).catch(error => {
         console.error(error);
         alert('エラーが発生しました');
     });
 }
+
+    function changeLabel(input) { 
+    const monay = {
+       'toCent': 'セント',
+       'toYuan': '元',
+       'toRand': 'ランド',
+       'toLari': 'ラリ'
+    };
+
+    document.getElementById('monaylabel').textContent = monay[input] || '円';
+    }
 
         fetchBalances();
     </script>
