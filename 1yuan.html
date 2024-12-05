@@ -250,7 +250,7 @@
     </div>    
   </div>
      <div class="title">
-  <p class="version">1元ギャンブル v2.1</p>
+  <p class="version">1元ギャンブル v2.1.1</p>
      </div>
   <div class="game-container" id="game-container">
 
@@ -618,6 +618,8 @@ function updateUserList() {
     });
 }
 
+updateUserList();
+
 
 function checkRestBet() { 
   const today = new Date().toISOString().split('T')[0]; 
@@ -644,7 +646,7 @@ function updateRestBetDisplay() {
   restBetRef.set(restBet);
 }
 
-window.onload = updateUserList;
+
 window.onload = checkRestBet;
 
 
